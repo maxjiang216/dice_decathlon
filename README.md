@@ -1,16 +1,27 @@
 # Knizia Decathlon Optimal Policy Precomputation
 
 This repository contains tools to compute and analyze **optimal strategies** for the events in *Reiner Knizia's Decathlon* dice game.  
-It currently includes a full implementation for the **Long Jump** event (best-of-three attempts), with plans to extend to all ten events.
+It currently includes:
+
+- **100m Sprint** — complete solver, database, analysis scripts, and interactive player.
+- **Long Jump** — solver and analysis in progress, policy precomputation implemented.
+
+The goal is to extend this framework to all ten Decathlon events.
+
+---
 
 ## 🎯 Overview
 
-The core idea is:
-1. **Precompute** the optimal policy for each event via exhaustive search / dynamic programming in **C++**.
-2. **Store** the policy and metadata in a compact **SQLite** database.
-3. **Analyze** the resulting probability distributions (PMF/CDF) and expected values using **Python**.
+The workflow for each event:
 
-This makes gameplay simulation and interactive play instantaneous — all heavy computation is done **once** at precomputation time.
+1. **Precompute** the optimal policy for every possible game state via exhaustive search / dynamic programming in **C++**.
+2. **Store** the optimal decisions, expected values, and standard deviations in a compact **SQLite** database.
+3. **Analyze** the resulting probability distributions (PMF and CDF) and summary statistics using **Python**.
+4. **Interactively play** against the optimal policy engine.
+
+This separation means:
+- **C++ solver** runs once per event to generate the database.
+- **Python tools** can instantly load and use that database without recomputing.
 
 ---
 
@@ -20,63 +31,96 @@ This makes gameplay simulation and interactive play instantaneous — all heavy 
 
 .
 ├── analysis/
-│   ├── analyze\_longjump\_pmf\_cdf.py   # PMF/CDF analysis and visualization
-│   └── ... (future event analysis scripts)
+│   ├── analyze\_100m\_pmf.py         # Simple EV/SD analysis for 100m
+│   ├── analyze\_100m\_pmf\_cdf.py     # Full PMF + CDF plots/tables for 100m
+│   ├── analyze\_longjump\_pmf\_cdf.py # Full PMF + CDF plots/tables for Long Jump
+│
 ├── players/
-│   └── longjump\_player.py            # Python interactive player using precomputed policy
+│   ├── 100m.py     # Interactive player for 100m
+│   ├── longjump.py # Interactive player for Long Jump (WIP)
+│
 ├── solvers/
-│   └── longjump\_precompute\_best3\_simple.cpp  # C++ solver (freeze-count version)
-│   └── ... (future event solvers)
-└── README.md
+│   ├── decathlon\_100m\_precompute.cpp # 100m C++ solver
+│   ├── decathlon\_100m\_solver.py      # 100m pure-Python solver
+│   ├── 100m\_precompute               # compiled binary (ignored in git)
+│   ├── 100m\_policy.db                 # SQLite DB for 100m
+│   ├── longjump\_precompute.cpp        # Long Jump C++ solver
+│   ├── longjump\_precompute            # compiled binary (ignored in git)
+│   ├── longjump\_policy.db             # SQLite DB for Long Jump
+│
+├── setup\_env.sh  # Quick setup script for Python venv
+├── README.md
 
 ````
 
 ---
 
-## ⚙️ How It Works
+## ⚙️ Event Details
+
+### 100m Sprint Rules Recap
+- Roll 5 dice up to 3 times.
+- After each roll, choose which dice to keep (“freeze”) and which to reroll.
+- Score is **sum of frozen dice** after the third roll.
+- Goal: maximize the total while minimizing variance from bad rolls.
+
+**Solver approach**:
+- Enumerates all possible (roll, frozen) states.
+- Calculates the optimal choice at each state to maximize expected final score.
+- Stores EV and SD for each state.
+
+---
 
 ### Long Jump Rules Recap
-- **5 dice**, 3 attempts per game.
-- Each attempt has:
-  - **Run-up phase**: Roll all remaining dice, freeze ≥1 die each roll, keeping total frozen sum ≤ 8.  
-    If sum would exceed 8, the attempt scores **0** (foul).
-  - **Jump phase**: Roll the frozen dice from the run-up. Freeze ≥1 die per roll until all are frozen.  
-    Score = sum of all frozen dice in jump.
-- **Final event score** = **best** of the three attempt scores.
+- **5 dice**, 3 attempts per event.
+- Each attempt:
+  - **Run-up phase**: Roll remaining dice, freeze ≥1 die each roll, total frozen sum ≤ 8 or foul (0).
+  - **Jump phase**: Roll frozen dice from run-up, freeze ≥1 die per roll until all are frozen.
+- **Final score** = best of the three attempts.
 
-### Precomputation Process
-- Enumerates all possible post-roll states.
-- Uses **dynamic programming** to find the optimal number of dice to freeze at each step:
-  - In **run-up**, freeze smallest dice possible.
-  - In **jump**, freeze largest dice possible.
-- For best-of-three:
-  - Adjusts risk dynamically — later attempts play riskier if a good score already exists.
-- Saves the policy and EV/SD into a **SQLite** database.
+**Solver approach**:
+- Enumerates all states.
+- In run-up: freeze smallest dice possible.
+- In jump: freeze largest dice possible.
+- Best-of-three logic adjusts strategy based on previous attempts.
 
 ---
 
 ## 🚀 Usage
 
-### 1. Build the solver
+### 1. Build a solver
+Example for Long Jump:
 ```bash
-g++ -O3 -std=c++20 solvers/longjump_precompute_best3_simple.cpp -lsqlite3 -o longjump_precompute
+g++ -O3 -std=c++20 solvers/longjump_precompute.cpp -lsqlite3 -o solvers/longjump_precompute
 ````
 
-### 2. Run the solver
+Example for 100m:
 
 ```bash
-./longjump_precompute solvers/longjump_policy.db
+g++ -O3 -std=c++20 solvers/decathlon_100m_precompute.cpp -lsqlite3 -o solvers/100m_precompute
 ```
 
-This creates `longjump_policy.db` with:
-
-* **`lj_post`** — optimal decisions for each post-roll state
-* **`lj_meta`** — attempt EV and standard deviation
-
-### 3. Analyze the policy
+### 2. Generate policy database
 
 ```bash
-# Activate Python environment (see below)
+./solvers/longjump_precompute solvers/longjump_policy.db
+./solvers/100m_precompute solvers/100m_policy.db
+```
+
+### 3. Analyze distributions
+
+Example for 100m:
+
+```bash
+python3 analysis/analyze_100m_pmf_cdf.py \
+  --db solvers/100m_policy.db \
+  --pmf-out 100m_pmf.png --pmf-csv 100m_pmf.csv \
+  --cdf-out 100m_cdf.png --cdf-txt 100m_cdf.txt \
+  --verbose
+```
+
+Example for Long Jump:
+
+```bash
 python3 analysis/analyze_longjump_pmf_cdf.py \
   --db solvers/longjump_policy.db \
   --attempt-pmf longjump_attempt_pmf.png \
@@ -86,39 +130,34 @@ python3 analysis/analyze_longjump_pmf_cdf.py \
   --verbose
 ```
 
-Generates:
-
-* PMF and CDF plots (`.png`)
-* Tabulated CDF values (`.txt`)
-* Summary statistics (EV, SD, support size)
-
 ---
 
 ## 🐍 Python Environment Setup
 
-For plotting (`matplotlib`) and CSV export (`pandas`):
-
 ```bash
-python3 -m venv .venv
+bash setup_env.sh
 source .venv/bin/activate
-pip install matplotlib pandas sqlite3
 ```
+
+`setup_env.sh` creates a Python virtual environment and installs:
+
+* `matplotlib`
+* `pandas`
 
 ---
 
 ## 📊 Example Outputs
 
-**Final Score PMF** — distribution of final event scores under optimal policy.
-**Final Score CDF** — probability of achieving at least a given score.
-
-*(Screenshots/plots will go here once generated.)*
+* **PMF plots**: show probability of each score under optimal play.
+* **CDF plots**: show probability of reaching at least a given score.
+* **CSV/TXT tables**: numeric values for analysis or reference.
 
 ---
 
 ## 🔮 Roadmap
 
-* [X] 100m Sprint
-* [] Long Jump
+* [x] 100m Sprint — complete
+* [ ] Long Jump — solver/analysis mostly done
 * [ ] Shot Put
 * [ ] High Jump
 * [ ] 400m
