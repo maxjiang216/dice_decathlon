@@ -31,24 +31,24 @@ This separation means:
 
 .
 ├── analysis/
-│   ├── analyze\_100m\_pmf.py         # Simple EV/SD analysis for 100m
-│   ├── analyze\_100m\_pmf\_cdf.py     # Full PMF + CDF plots/tables for 100m
-│   ├── analyze\_longjump\_pmf\_cdf.py # Full PMF + CDF plots/tables for Long Jump
+│   ├── analyze_100m_pmf.py         # Simple EV/SD analysis for 100m
+│   ├── analyze_100m_pmf_cdf.py     # Full PMF + CDF plots/tables for 100m
+│   ├── analyze_longjump_pmf_cdf.py # Full PMF + CDF plots/tables for Long Jump
 │
 ├── players/
 │   ├── 100m.py     # Interactive player for 100m
 │   ├── longjump.py # Interactive player for Long Jump (WIP)
 │
 ├── solvers/
-│   ├── decathlon\_100m\_precompute.cpp # 100m C++ solver
-│   ├── decathlon\_100m\_solver.py      # 100m pure-Python solver
-│   ├── 100m\_precompute               # compiled binary (ignored in git)
-│   ├── 100m\_policy.db                 # SQLite DB for 100m
-│   ├── longjump\_precompute.cpp        # Long Jump C++ solver
-│   ├── longjump\_precompute            # compiled binary (ignored in git)
-│   ├── longjump\_policy.db             # SQLite DB for Long Jump
+│   ├── decathlon_100m_precompute.cpp # 100m C++ solver
+│   ├── decathlon_100m_solver.py      # 100m pure-Python solver
+│   ├── 100m_precompute               # compiled binary (ignored in git)
+│   ├── 100m_policy.db                 # SQLite DB for 100m
+│   ├── longjump_precompute.cpp        # Long Jump C++ solver
+│   ├── longjump_precompute            # compiled binary (ignored in git)
+│   ├── longjump_policy.db             # SQLite DB for Long Jump
 │
-├── setup\_env.sh  # Quick setup script for Python venv
+├── setup_env.sh  # Quick setup script for Python venv
 ├── README.md
 
 ````
