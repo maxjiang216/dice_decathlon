@@ -117,8 +117,8 @@ pip install matplotlib pandas sqlite3
 
 ## 🔮 Roadmap
 
-* [x] Long Jump (best-of-3 policy, freeze-count optimized)
-* [ ] 100m Sprint
+* [X] 100m Sprint
+* [] Long Jump
 * [ ] Shot Put
 * [ ] High Jump
 * [ ] 400m
@@ -127,19 +127,3 @@ pip install matplotlib pandas sqlite3
 * [ ] Pole Vault
 * [ ] Javelin
 * [ ] 1500m
-
----
-
-## 📜 License
-
-MIT License — see `LICENSE` for details.
-
----
-
-## 🤝 Contributing
-
-PRs welcome! Especially for:
-
-* Implementing the remaining events
-* Improving solver performance
-* Adding richer analysis/visualization
