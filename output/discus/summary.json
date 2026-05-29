@@ -1,0 +1,10 @@
+{
+  "key": "discus",
+  "name": "Discus",
+  "expected_value": 22.317089284507077,
+  "std_dev": 4.543104175688774,
+  "min_score": 0,
+  "max_score": 30,
+  "mode_score": 24,
+  "mode_probability": 0.21913106940164837
+}

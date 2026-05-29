@@ -1,0 +1,10 @@
+{
+  "key": "javelin",
+  "name": "Javelin",
+  "expected_value": 22.251507501497272,
+  "std_dev": 4.30323588671971,
+  "min_score": 0,
+  "max_score": 30,
+  "mode_score": 24,
+  "mode_probability": 0.14949541108807773
+}

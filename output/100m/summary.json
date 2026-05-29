@@ -1,0 +1,10 @@
+{
+  "key": "100m",
+  "name": "100 Metres",
+  "expected_value": 23.997512228931097,
+  "std_dev": 6.1925644209504425,
+  "min_score": -48,
+  "max_score": 40,
+  "mode_score": 26,
+  "mode_probability": 0.10096730293836705
+}

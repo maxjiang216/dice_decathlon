@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="520" font-family="sans-serif">
+<rect width="820" height="520" fill="white"/>
+<text x="410" y="24" font-size="18" text-anchor="middle">1500 Metres - score PMF</text>
+<line x1="60" y1="470" x2="800" y2="470" stroke="black"/>
+<line x1="60" y1="40" x2="60" y2="470" stroke="black"/>
+<text x="52.0" y="470.0" font-size="12" text-anchor="end">0</text>
+<text x="52.0" y="40.0" font-size="12" text-anchor="end">0.095</text>
+<text x="60.0" y="488.0" font-size="12" text-anchor="middle">-48</text>
+<text x="800.0" y="488.0" font-size="12" text-anchor="middle">40</text>
+<rect x="56.6" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="115.5" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="123.9" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="132.3" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="140.7" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="149.1" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="174.4" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="182.8" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="191.2" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="199.6" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="208.0" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="216.4" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="224.8" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="233.2" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="241.6" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="250.0" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="258.5" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="266.9" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="275.3" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="283.7" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="292.1" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="300.5" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="308.9" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="317.3" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="325.7" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="334.1" y="470.0" width="6.7" height="0.0" fill="steelblue"/>
+<rect x="342.5" y="469.9" width="6.7" height="0.1" fill="steelblue"/>
+<rect x="351.0" y="469.9" width="6.7" height="0.1" fill="steelblue"/>
+<rect x="359.4" y="469.9" width="6.7" height="0.1" fill="steelblue"/>
+<rect x="367.8" y="469.9" width="6.7" height="0.1" fill="steelblue"/>
+<rect x="376.2" y="469.9" width="6.7" height="0.1" fill="steelblue"/>
+<rect x="384.6" y="469.9" width="6.7" height="0.1" fill="steelblue"/>
+<rect x="393.0" y="469.8" width="6.7" height="0.2" fill="steelblue"/>
+<rect x="401.4" y="469.7" width="6.7" height="0.3" fill="steelblue"/>
+<rect x="409.8" y="469.6" width="6.7" height="0.4" fill="steelblue"/>
+<rect x="418.2" y="469.5" width="6.7" height="0.5" fill="steelblue"/>
+<rect x="426.6" y="469.4" width="6.7" height="0.6" fill="steelblue"/>
+<rect x="435.0" y="469.2" width="6.7" height="0.8" fill="steelblue"/>
+<rect x="443.5" y="469.1" width="6.7" height="0.9" fill="steelblue"/>
+<rect x="451.9" y="469.0" width="6.7" height="1.0" fill="steelblue"/>
+<rect x="460.3" y="468.8" width="6.7" height="1.2" fill="steelblue"/>
+<rect x="468.7" y="468.4" width="6.7" height="1.6" fill="steelblue"/>
+<rect x="477.1" y="467.9" width="6.7" height="2.1" fill="steelblue"/>
+<rect x="485.5" y="467.2" width="6.7" height="2.8" fill="steelblue"/>
+<rect x="493.9" y="466.3" width="6.7" height="3.7" fill="steelblue"/>
+<rect x="502.3" y="465.4" width="6.7" height="4.6" fill="steelblue"/>
+<rect x="510.7" y="464.5" width="6.7" height="5.5" fill="steelblue"/>
+<rect x="519.1" y="463.6" width="6.7" height="6.4" fill="steelblue"/>
+<rect x="527.5" y="462.6" width="6.7" height="7.4" fill="steelblue"/>
+<rect x="536.0" y="461.2" width="6.7" height="8.8" fill="steelblue"/>
+<rect x="544.4" y="459.2" width="6.7" height="10.8" fill="steelblue"/>
+<rect x="552.8" y="456.3" width="6.7" height="13.7" fill="steelblue"/>
+<rect x="561.2" y="452.3" width="6.7" height="17.7" fill="steelblue"/>
+<rect x="569.6" y="447.2" width="6.7" height="22.8" fill="steelblue"/>
+<rect x="578.0" y="441.2" width="6.7" height="28.8" fill="steelblue"/>
+<rect x="586.4" y="434.5" width="6.7" height="35.5" fill="steelblue"/>
+<rect x="594.8" y="427.4" width="6.7" height="42.6" fill="steelblue"/>
+<rect x="603.2" y="419.4" width="6.7" height="50.6" fill="steelblue"/>
+<rect x="611.6" y="409.5" width="6.7" height="60.5" fill="steelblue"/>
+<rect x="620.0" y="395.9" width="6.7" height="74.1" fill="steelblue"/>
+<rect x="628.5" y="376.4" width="6.7" height="93.6" fill="steelblue"/>
+<rect x="636.9" y="348.6" width="6.7" height="121.4" fill="steelblue"/>
+<rect x="645.3" y="311.0" width="6.7" height="159.0" fill="steelblue"/>
+<rect x="653.7" y="263.5" width="6.7" height="206.5" fill="steelblue"/>
+<rect x="662.1" y="208.6" width="6.7" height="261.4" fill="steelblue"/>
+<rect x="670.5" y="151.0" width="6.7" height="319.0" fill="steelblue"/>
+<rect x="678.9" y="98.0" width="6.7" height="372.0" fill="steelblue"/>
+<rect x="687.3" y="58.2" width="6.7" height="411.8" fill="steelblue"/>
+<rect x="695.7" y="40.0" width="6.7" height="430.0" fill="steelblue"/>
+<rect x="704.1" y="49.1" width="6.7" height="420.9" fill="steelblue"/>
+<rect x="712.5" y="86.6" width="6.7" height="383.4" fill="steelblue"/>
+<rect x="721.0" y="147.4" width="6.7" height="322.6" fill="steelblue"/>
+<rect x="729.4" y="221.5" width="6.7" height="248.5" fill="steelblue"/>
+<rect x="737.8" y="296.5" width="6.7" height="173.5" fill="steelblue"/>
+<rect x="746.2" y="361.6" width="6.7" height="108.4" fill="steelblue"/>
+<rect x="754.6" y="410.3" width="6.7" height="59.7" fill="steelblue"/>
+<rect x="763.0" y="441.7" width="6.7" height="28.3" fill="steelblue"/>
+<rect x="771.4" y="458.8" width="6.7" height="11.2" fill="steelblue"/>
+<rect x="779.8" y="466.5" width="6.7" height="3.5" fill="steelblue"/>
+<rect x="788.2" y="469.2" width="6.7" height="0.8" fill="steelblue"/>
+<rect x="796.6" y="469.9" width="6.7" height="0.1" fill="steelblue"/>
+</svg>

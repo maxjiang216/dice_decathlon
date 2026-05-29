@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="520" font-family="sans-serif">
+<rect width="820" height="520" fill="white"/>
+<text x="410" y="24" font-size="18" text-anchor="middle">Long Jump - score PMF</text>
+<line x1="60" y1="470" x2="800" y2="470" stroke="black"/>
+<line x1="60" y1="40" x2="60" y2="470" stroke="black"/>
+<text x="52.0" y="470.0" font-size="12" text-anchor="end">0</text>
+<text x="52.0" y="40.0" font-size="12" text-anchor="end">0.103</text>
+<text x="60.0" y="488.0" font-size="12" text-anchor="middle">0</text>
+<text x="800.0" y="488.0" font-size="12" text-anchor="middle">30</text>
+<rect x="50.1" y="461.4" width="19.7" height="8.6" fill="steelblue"/>
+<rect x="99.5" y="470.0" width="19.7" height="0.0" fill="steelblue"/>
+<rect x="124.1" y="469.9" width="19.7" height="0.1" fill="steelblue"/>
+<rect x="148.8" y="469.8" width="19.7" height="0.2" fill="steelblue"/>
+<rect x="173.5" y="469.7" width="19.7" height="0.3" fill="steelblue"/>
+<rect x="198.1" y="469.4" width="19.7" height="0.6" fill="steelblue"/>
+<rect x="222.8" y="468.8" width="19.7" height="1.2" fill="steelblue"/>
+<rect x="247.5" y="467.7" width="19.7" height="2.3" fill="steelblue"/>
+<rect x="272.1" y="466.1" width="19.7" height="3.9" fill="steelblue"/>
+<rect x="296.8" y="464.0" width="19.7" height="6.0" fill="steelblue"/>
+<rect x="321.5" y="460.1" width="19.7" height="9.9" fill="steelblue"/>
+<rect x="346.1" y="452.9" width="19.7" height="17.1" fill="steelblue"/>
+<rect x="370.8" y="444.9" width="19.7" height="25.1" fill="steelblue"/>
+<rect x="395.5" y="429.7" width="19.7" height="40.3" fill="steelblue"/>
+<rect x="420.1" y="408.5" width="19.7" height="61.5" fill="steelblue"/>
+<rect x="444.8" y="377.1" width="19.7" height="92.9" fill="steelblue"/>
+<rect x="469.5" y="324.3" width="19.7" height="145.7" fill="steelblue"/>
+<rect x="494.1" y="260.2" width="19.7" height="209.8" fill="steelblue"/>
+<rect x="518.8" y="191.2" width="19.7" height="278.8" fill="steelblue"/>
+<rect x="543.5" y="85.7" width="19.7" height="384.3" fill="steelblue"/>
+<rect x="568.1" y="40.0" width="19.7" height="430.0" fill="steelblue"/>
+<rect x="592.8" y="61.2" width="19.7" height="408.8" fill="steelblue"/>
+<rect x="617.5" y="111.6" width="19.7" height="358.4" fill="steelblue"/>
+<rect x="642.1" y="148.1" width="19.7" height="321.9" fill="steelblue"/>
+<rect x="666.8" y="151.8" width="19.7" height="318.2" fill="steelblue"/>
+<rect x="691.5" y="122.4" width="19.7" height="347.6" fill="steelblue"/>
+<rect x="716.1" y="150.6" width="19.7" height="319.4" fill="steelblue"/>
+<rect x="740.8" y="238.4" width="19.7" height="231.6" fill="steelblue"/>
+<rect x="765.5" y="351.1" width="19.7" height="118.9" fill="steelblue"/>
+<rect x="790.1" y="434.5" width="19.7" height="35.5" fill="steelblue"/>
+</svg>

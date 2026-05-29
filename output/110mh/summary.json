@@ -1,0 +1,10 @@
+{
+  "key": "110mh",
+  "name": "110 Metre Hurdles",
+  "expected_value": 21.375403087085072,
+  "std_dev": 2.956410397078642,
+  "min_score": 5,
+  "max_score": 30,
+  "mode_score": 22,
+  "mode_probability": 0.18607463951979308
+}

@@ -1,0 +1,10 @@
+{
+  "key": "polevault",
+  "name": "Pole Vault",
+  "expected_value": 17.27763423783966,
+  "std_dev": 11.138199783211396,
+  "min_score": 0,
+  "max_score": 48,
+  "mode_score": 12,
+  "mode_probability": 0.426465422771434
+}

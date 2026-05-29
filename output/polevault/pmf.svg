@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="520" font-family="sans-serif">
+<rect width="820" height="520" fill="white"/>
+<text x="410" y="24" font-size="18" text-anchor="middle">Pole Vault - score PMF</text>
+<line x1="60" y1="470" x2="800" y2="470" stroke="black"/>
+<line x1="60" y1="40" x2="60" y2="470" stroke="black"/>
+<text x="52.0" y="470.0" font-size="12" text-anchor="end">0</text>
+<text x="52.0" y="40.0" font-size="12" text-anchor="end">0.426</text>
+<text x="60.0" y="488.0" font-size="12" text-anchor="middle">0</text>
+<text x="800.0" y="488.0" font-size="12" text-anchor="middle">48</text>
+<rect x="53.8" y="307.0" width="12.3" height="163.0" fill="steelblue"/>
+<rect x="238.8" y="40.0" width="12.3" height="430.0" fill="steelblue"/>
+<rect x="485.5" y="194.3" width="12.3" height="275.7" fill="steelblue"/>
+<rect x="547.2" y="348.5" width="12.3" height="121.5" fill="steelblue"/>
+<rect x="608.8" y="453.0" width="12.3" height="17.0" fill="steelblue"/>
+<rect x="639.7" y="469.0" width="12.3" height="1.0" fill="steelblue"/>
+<rect x="670.5" y="470.0" width="12.3" height="0.0" fill="steelblue"/>
+<rect x="701.3" y="470.0" width="12.3" height="0.0" fill="steelblue"/>
+<rect x="732.2" y="470.0" width="12.3" height="0.0" fill="steelblue"/>
+<rect x="763.0" y="470.0" width="12.3" height="0.0" fill="steelblue"/>
+<rect x="793.8" y="470.0" width="12.3" height="0.0" fill="steelblue"/>
+</svg>
