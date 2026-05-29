@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="520" font-family="sans-serif">
+<rect width="820" height="520" fill="white"/>
+<text x="410" y="24" font-size="18" text-anchor="middle">Javelin - score PMF</text>
+<line x1="60" y1="470" x2="800" y2="470" stroke="black"/>
+<line x1="60" y1="40" x2="60" y2="470" stroke="black"/>
+<text x="52.0" y="470.0" font-size="12" text-anchor="end">0</text>
+<text x="52.0" y="40.0" font-size="12" text-anchor="end">0.149</text>
+<text x="60.0" y="488.0" font-size="12" text-anchor="middle">0</text>
+<text x="800.0" y="488.0" font-size="12" text-anchor="middle">30</text>
+<rect x="50.1" y="431.3" width="19.7" height="38.7" fill="steelblue"/>
+<rect x="173.5" y="470.0" width="19.7" height="0.0" fill="steelblue"/>
+<rect x="198.1" y="470.0" width="19.7" height="0.0" fill="steelblue"/>
+<rect x="222.8" y="469.8" width="19.7" height="0.2" fill="steelblue"/>
+<rect x="247.5" y="469.9" width="19.7" height="0.1" fill="steelblue"/>
+<rect x="272.1" y="468.8" width="19.7" height="1.2" fill="steelblue"/>
+<rect x="296.8" y="469.6" width="19.7" height="0.4" fill="steelblue"/>
+<rect x="321.5" y="463.7" width="19.7" height="6.3" fill="steelblue"/>
+<rect x="346.1" y="460.5" width="19.7" height="9.5" fill="steelblue"/>
+<rect x="370.8" y="451.9" width="19.7" height="18.1" fill="steelblue"/>
+<rect x="395.5" y="452.5" width="19.7" height="17.5" fill="steelblue"/>
+<rect x="420.1" y="422.8" width="19.7" height="47.2" fill="steelblue"/>
+<rect x="444.8" y="425.0" width="19.7" height="45.0" fill="steelblue"/>
+<rect x="469.5" y="366.0" width="19.7" height="104.0" fill="steelblue"/>
+<rect x="494.1" y="383.6" width="19.7" height="86.4" fill="steelblue"/>
+<rect x="518.8" y="287.3" width="19.7" height="182.7" fill="steelblue"/>
+<rect x="543.5" y="304.1" width="19.7" height="165.9" fill="steelblue"/>
+<rect x="568.1" y="162.6" width="19.7" height="307.4" fill="steelblue"/>
+<rect x="592.8" y="153.5" width="19.7" height="316.5" fill="steelblue"/>
+<rect x="617.5" y="153.6" width="19.7" height="316.4" fill="steelblue"/>
+<rect x="642.1" y="40.0" width="19.7" height="430.0" fill="steelblue"/>
+<rect x="666.8" y="295.7" width="19.7" height="174.3" fill="steelblue"/>
+<rect x="691.5" y="98.9" width="19.7" height="371.1" fill="steelblue"/>
+<rect x="740.8" y="286.0" width="19.7" height="184.0" fill="steelblue"/>
+<rect x="790.1" y="416.3" width="19.7" height="53.7" fill="steelblue"/>
+</svg>

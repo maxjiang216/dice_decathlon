@@ -1,0 +1,13 @@
+# Linter configs fetched by scripts/lint.sh
+.code-standards/
+# clippy.toml is copied in by scripts/lint.sh from .code-standards/
+clippy.toml
+
+# Rust build artifacts
+/target/
+
+# Python / editor / virtualenv
+.venv/
+__pycache__/
+*.pyc
+.vscode/

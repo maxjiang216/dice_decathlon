@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="520" font-family="sans-serif">
+<rect width="820" height="520" fill="white"/>
+<text x="410" y="24" font-size="18" text-anchor="middle">110 Metre Hurdles - score CDF</text>
+<line x1="60" y1="470" x2="800" y2="470" stroke="black"/>
+<line x1="60" y1="40" x2="60" y2="470" stroke="black"/>
+<text x="52.0" y="470.0" font-size="12" text-anchor="end">0</text>
+<text x="52.0" y="40.0" font-size="12" text-anchor="end">1.000</text>
+<text x="60.0" y="488.0" font-size="12" text-anchor="middle">5</text>
+<text x="800.0" y="488.0" font-size="12" text-anchor="middle">30</text>
+<path d="M 60.0 470.0 L 60.0 470.0 L 60.0 470.0 L 89.6 470.0 L 89.6 469.9 L 119.2 469.9 L 119.2 469.8 L 148.8 469.8 L 148.8 469.5 L 178.4 469.5 L 178.4 468.9 L 208.0 468.9 L 208.0 467.8 L 237.6 467.8 L 237.6 466.0 L 267.2 466.0 L 267.2 463.3 L 296.8 463.3 L 296.8 459.6 L 326.4 459.6 L 326.4 454.8 L 356.0 454.8 L 356.0 449.1 L 385.6 449.1 L 385.6 442.6 L 415.2 442.6 L 415.2 435.7 L 444.8 435.7 L 444.8 415.1 L 474.4 415.1 L 474.4 395.7 L 504.0 395.7 L 504.0 338.2 L 533.6 338.2 L 533.6 265.2 L 563.2 265.2 L 563.2 185.2 L 592.8 185.2 L 592.8 127.1 L 622.4 127.1 L 622.4 88.0 L 652.0 88.0 L 652.0 64.0 L 681.6 64.0 L 681.6 50.7 L 711.2 50.7 L 711.2 44.0 L 740.8 44.0 L 740.8 41.1 L 770.4 41.1 L 770.4 40.2 L 800.0 40.2 L 800.0 40.0 " fill="none" stroke="crimson" stroke-width="2"/>
+</svg>

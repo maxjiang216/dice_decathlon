@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="520" font-family="sans-serif">
+<rect width="820" height="520" fill="white"/>
+<text x="410" y="24" font-size="18" text-anchor="middle">110 Metre Hurdles - score PMF</text>
+<line x1="60" y1="470" x2="800" y2="470" stroke="black"/>
+<line x1="60" y1="40" x2="60" y2="470" stroke="black"/>
+<text x="52.0" y="470.0" font-size="12" text-anchor="end">0</text>
+<text x="52.0" y="40.0" font-size="12" text-anchor="end">0.186</text>
+<text x="60.0" y="488.0" font-size="12" text-anchor="middle">5</text>
+<text x="800.0" y="488.0" font-size="12" text-anchor="middle">30</text>
+<rect x="48.2" y="470.0" width="23.7" height="0.0" fill="steelblue"/>
+<rect x="77.8" y="469.8" width="23.7" height="0.2" fill="steelblue"/>
+<rect x="107.4" y="469.3" width="23.7" height="0.7" fill="steelblue"/>
+<rect x="137.0" y="468.3" width="23.7" height="1.7" fill="steelblue"/>
+<rect x="166.6" y="466.7" width="23.7" height="3.3" fill="steelblue"/>
+<rect x="196.2" y="464.0" width="23.7" height="6.0" fill="steelblue"/>
+<rect x="225.8" y="460.3" width="23.7" height="9.7" fill="steelblue"/>
+<rect x="255.4" y="455.6" width="23.7" height="14.4" fill="steelblue"/>
+<rect x="285.0" y="450.1" width="23.7" height="19.9" fill="steelblue"/>
+<rect x="314.6" y="444.4" width="23.7" height="25.6" fill="steelblue"/>
+<rect x="344.2" y="439.2" width="23.7" height="30.8" fill="steelblue"/>
+<rect x="373.8" y="435.2" width="23.7" height="34.8" fill="steelblue"/>
+<rect x="403.4" y="433.1" width="23.7" height="36.9" fill="steelblue"/>
+<rect x="433.0" y="359.2" width="23.7" height="110.8" fill="steelblue"/>
+<rect x="462.6" y="365.6" width="23.7" height="104.4" fill="steelblue"/>
+<rect x="492.2" y="161.0" width="23.7" height="309.0" fill="steelblue"/>
+<rect x="521.8" y="77.6" width="23.7" height="392.4" fill="steelblue"/>
+<rect x="551.4" y="40.0" width="23.7" height="430.0" fill="steelblue"/>
+<rect x="581.0" y="157.7" width="23.7" height="312.3" fill="steelblue"/>
+<rect x="610.6" y="260.1" width="23.7" height="209.9" fill="steelblue"/>
+<rect x="640.2" y="341.0" width="23.7" height="129.0" fill="steelblue"/>
+<rect x="669.8" y="398.3" width="23.7" height="71.7" fill="steelblue"/>
+<rect x="699.4" y="434.2" width="23.7" height="35.8" fill="steelblue"/>
+<rect x="729.0" y="454.6" width="23.7" height="15.4" fill="steelblue"/>
+<rect x="758.6" y="464.9" width="23.7" height="5.1" fill="steelblue"/>
+<rect x="788.2" y="469.0" width="23.7" height="1.0" fill="steelblue"/>
+</svg>

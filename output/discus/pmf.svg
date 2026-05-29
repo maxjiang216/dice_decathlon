@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="520" font-family="sans-serif">
+<rect width="820" height="520" fill="white"/>
+<text x="410" y="24" font-size="18" text-anchor="middle">Discus - score PMF</text>
+<line x1="60" y1="470" x2="800" y2="470" stroke="black"/>
+<line x1="60" y1="40" x2="60" y2="470" stroke="black"/>
+<text x="52.0" y="470.0" font-size="12" text-anchor="end">0</text>
+<text x="52.0" y="40.0" font-size="12" text-anchor="end">0.219</text>
+<text x="60.0" y="488.0" font-size="12" text-anchor="middle">0</text>
+<text x="800.0" y="488.0" font-size="12" text-anchor="middle">30</text>
+<rect x="50.1" y="438.2" width="19.7" height="31.8" fill="steelblue"/>
+<rect x="247.5" y="469.8" width="19.7" height="0.2" fill="steelblue"/>
+<rect x="296.8" y="468.5" width="19.7" height="1.5" fill="steelblue"/>
+<rect x="346.1" y="461.0" width="19.7" height="9.0" fill="steelblue"/>
+<rect x="395.5" y="441.7" width="19.7" height="28.3" fill="steelblue"/>
+<rect x="444.8" y="383.8" width="19.7" height="86.2" fill="steelblue"/>
+<rect x="494.1" y="305.0" width="19.7" height="165.0" fill="steelblue"/>
+<rect x="543.5" y="184.7" width="19.7" height="285.3" fill="steelblue"/>
+<rect x="592.8" y="50.5" width="19.7" height="419.5" fill="steelblue"/>
+<rect x="642.1" y="40.0" width="19.7" height="430.0" fill="steelblue"/>
+<rect x="691.5" y="174.9" width="19.7" height="295.1" fill="steelblue"/>
+<rect x="740.8" y="311.2" width="19.7" height="158.8" fill="steelblue"/>
+<rect x="790.1" y="418.4" width="19.7" height="51.6" fill="steelblue"/>
+</svg>

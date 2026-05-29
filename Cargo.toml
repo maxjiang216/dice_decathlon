@@ -1,0 +1,17 @@
+[package]
+name = "dice_decathlon"
+version = "0.1.0"
+edition = "2021"
+description = "Optimal expected-value DP solvers for Knizia's Decathlon dice game"
+
+[[bin]]
+name = "decathlon"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = 3

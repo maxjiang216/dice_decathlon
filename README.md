@@ -8,6 +8,75 @@ It currently includes:
 
 The goal is to extend this framework to all ten Decathlon events.
 
+> **New: all-Rust solvers.** A self-contained Rust crate now computes the
+> optimal expected-value policy for **all ten events** via exact dynamic
+> programming, replacing the per-event C++/Python pipeline. The original
+> C++/Python files are kept for reference. See
+> [Rust implementation](#-rust-implementation) below.
+
+---
+
+## 🦀 Rust implementation
+
+The `decathlon` Rust binary solves every event as a single-player game whose
+objective is to maximise the expected value of that event's own score
+(multiplayer turn order and championship medals are out of scope). Each
+solver returns the **exact distribution** of the final score under optimal
+play; expected value, standard deviation, PMF and CDF are derived from it.
+
+Three shared engines cover the ten events:
+
+- **Reroll-set** (`src/disciplines/reroll_sets.rs`) — 100m, 400m, 1500m, Hurdles.
+- **Best-of-N attempts** (`src/disciplines/best_of_n.rs`) — Shot Put, Long Jump,
+  Discus, Javelin. Within-attempt play is conditioned on the best score banked
+  so far via a value function `v(k, b)`.
+- **Rising bar** (`src/disciplines/heights.rs`) — High Jump, Pole Vault.
+
+Dice outcomes are enumerated as face-count patterns weighted by their
+**multinomial multiplicity** (`src/dice.rs`), so expected values use correct
+probabilities. (Note: the old C++ 100m solver averaged distinct sorted
+patterns uniformly, which slightly misweights the EV; the Rust version fixes
+this.)
+
+### Usage
+
+```bash
+cargo run --release -- list                 # list discipline keys
+cargo run --release -- solve 100m           # EV/SD for one event
+cargo run --release -- analyze              # solve all, write output/<key>/
+cargo run --release -- analyze longjump --out output
+cargo test                                  # unit + integration tests
+```
+
+`analyze` writes, per event, `pmf.csv`, `cdf.txt`, `summary.json`, and SVG
+charts (`pmf.svg`, `cdf.svg`) under `output/<key>/`.
+
+### Optimal expected values (own score)
+
+| Event | Key | EV | SD |
+|-------|-----|---:|---:|
+| 100 Metres | `100m` | 24.00 | 6.19 |
+| Long Jump | `longjump` | 22.40 | 3.97 |
+| Shot Put | `shotput` | 18.63 | 12.03 |
+| High Jump | `highjump` | 19.26 | 2.27 |
+| 400 Metres | `400m` | 25.67 | 5.46 |
+| 110m Hurdles | `110mh` | 21.38 | 2.96 |
+| Discus | `discus` | 22.32 | 4.54 |
+| Pole Vault | `polevault` | 17.28 | 11.14 |
+| Javelin | `javelin` | 22.25 | 4.30 |
+| 1500 Metres | `1500m` | 26.53 | 5.25 |
+
+### Linting
+
+Code standards are enforced with
+[standard-linter](https://github.com/maxjiang216/standard-linter)
+(rustfmt + clippy). Run locally with:
+
+```bash
+bash scripts/lint.sh --fix --lang rust   # auto-format
+bash scripts/lint.sh --lang rust         # check
+```
+
 ---
 
 ## 🎯 Overview
@@ -156,13 +225,15 @@ source .venv/bin/activate
 
 ## 🔮 Roadmap
 
-* [x] 100m Sprint — complete
-* [ ] Long Jump — solver/analysis mostly done
-* [ ] Shot Put
-* [ ] High Jump
-* [ ] 400m
-* [ ] 110m Hurdles
-* [ ] Discus
-* [ ] Pole Vault
-* [ ] Javelin
-* [ ] 1500m
+All ten events are now solved by the Rust crate (exact optimal-EV DP):
+
+* [x] 100m Sprint
+* [x] Long Jump
+* [x] Shot Put
+* [x] High Jump
+* [x] 400m
+* [x] 110m Hurdles
+* [x] Discus
+* [x] Pole Vault
+* [x] Javelin
+* [x] 1500m

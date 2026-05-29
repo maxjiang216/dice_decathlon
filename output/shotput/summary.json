@@ -1,0 +1,10 @@
+{
+  "key": "shotput",
+  "name": "Shot Put",
+  "expected_value": 18.63449198538666,
+  "std_dev": 12.026563464053421,
+  "min_score": 0,
+  "max_score": 48,
+  "mode_score": 0,
+  "mode_probability": 0.2694611131985714
+}

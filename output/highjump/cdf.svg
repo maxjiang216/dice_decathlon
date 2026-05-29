@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="520" font-family="sans-serif">
+<rect width="820" height="520" fill="white"/>
+<text x="410" y="24" font-size="18" text-anchor="middle">High Jump - score CDF</text>
+<line x1="60" y1="470" x2="800" y2="470" stroke="black"/>
+<line x1="60" y1="40" x2="60" y2="470" stroke="black"/>
+<text x="52.0" y="470.0" font-size="12" text-anchor="end">0</text>
+<text x="52.0" y="40.0" font-size="12" text-anchor="end">1.000</text>
+<text x="60.0" y="488.0" font-size="12" text-anchor="middle">0</text>
+<text x="800.0" y="488.0" font-size="12" text-anchor="middle">30</text>
+<path d="M 60.0 470.0 L 60.0 470.0 L 60.0 470.0 L 306.7 470.0 L 306.7 469.9 L 356.0 469.9 L 356.0 468.4 L 405.3 468.4 L 405.3 456.2 L 454.7 456.2 L 454.7 404.2 L 504.0 404.2 L 504.0 282.0 L 553.3 282.0 L 553.3 134.4 L 602.7 134.4 L 602.7 55.7 L 652.0 55.7 L 652.0 40.8 L 701.3 40.8 L 701.3 40.0 L 750.7 40.0 L 750.7 40.0 L 800.0 40.0 L 800.0 40.0 " fill="none" stroke="crimson" stroke-width="2"/>
+</svg>

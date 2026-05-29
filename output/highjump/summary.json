@@ -1,0 +1,10 @@
+{
+  "key": "highjump",
+  "name": "High Jump",
+  "expected_value": 19.263445440989052,
+  "std_dev": 2.2688536077645787,
+  "min_score": 0,
+  "max_score": 30,
+  "mode_score": 20,
+  "mode_probability": 0.3432180211138184
+}

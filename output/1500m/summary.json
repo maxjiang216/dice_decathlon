@@ -1,0 +1,10 @@
+{
+  "key": "1500m",
+  "name": "1500 Metres",
+  "expected_value": 26.52879192419171,
+  "std_dev": 5.253663686007478,
+  "min_score": -48,
+  "max_score": 40,
+  "mode_score": 28,
+  "mode_probability": 0.09466716167497109
+}

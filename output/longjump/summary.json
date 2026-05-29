@@ -1,0 +1,10 @@
+{
+  "key": "longjump",
+  "name": "Long Jump",
+  "expected_value": 22.394956800332995,
+  "std_dev": 3.9717404398813496,
+  "min_score": 0,
+  "max_score": 30,
+  "mode_score": 21,
+  "mode_probability": 0.10290241145490568
+}
