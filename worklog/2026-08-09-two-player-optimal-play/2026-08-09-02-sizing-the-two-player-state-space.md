@@ -302,8 +302,10 @@ lint.sh has **never run more than one check** in this repo: the Python block cam
 died, and `cargo clippy` was never reached locally. It stayed invisible because the first
 check was failing anyway on the legacy Python, so the abort looked like an ordinary
 failure. Fixed here, and upstream in
-[standard-linter#4](https://github.com/maxjiang216/standard-linter/pull/4), since this
-file is vendored and the fix would otherwise be lost on the next copy. CI was never
+[standard-linter#4](https://github.com/maxjiang216/standard-linter/pull/4) — **merged**,
+so the vendored copy here is byte-identical to upstream `main` and nothing diverges. That
+mattered: the file is copied in rather than fetched, so a fix left only here would have
+been silently reverted the next time it was refreshed. CI was never
 affected — it calls the standard-linter workflow directly rather than this script, which
 is why the clippy error in `270a7bd` was still caught.
 
