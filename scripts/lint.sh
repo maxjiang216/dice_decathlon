@@ -45,10 +45,10 @@ run_check() {
   shift
   if "$@"; then
     echo -e "${PASS} ${label}"
-    ((passed++))
+    passed=$((passed + 1))
   else
     echo -e "${FAIL} ${label}"
-    ((failed++))
+    failed=$((failed + 1))
   fi
 }
 
@@ -56,7 +56,7 @@ skip_tool() {
   local tool="$1"
   local install_hint="$2"
   echo -e "${SKIP} ${tool} not found — install with: ${install_hint}"
-  ((skipped++))
+  skipped=$((skipped + 1))
 }
 
 gofmt_check() {
@@ -136,7 +136,7 @@ if [[ "${DO_CPP}" == true ]]; then
       [[ -f build/compile_commands.json ]] && compile_db="build"
       if [[ -z "${compile_db}" ]]; then
         echo -e "${SKIP} clang-tidy — no compile_commands.json found"
-        ((skipped++))
+        skipped=$((skipped + 1))
       else
         mapfile -t SRC_FILES < <(git ls-files \
           "*.c" "*.cc" "*.cpp" "*.cxx" 2>/dev/null)
