@@ -40,17 +40,19 @@ Status key: `[ ]` open · `[x]` closed, with what closed it.
   the moment anything makes the three jumps non-identical (a variant that carries dice
   over, or a rule about ones accumulating).
 
-- [ ] **Skipping a height is modelled but is never chosen — under solo EV only.**
-  `p_clear` is monotone decreasing in the height, so attempting `h` weakly dominates
-  skipping to `h+2`; the skip branch is dead code for the current objective. It is kept
-  because the rulebook example explicitly skips heights. *Watch for:* anyone
-  "simplifying" the skip branch away — **it is provably live under a win-probability
-  objective**, see `worklog/2026-08-09-two-player-optimal-play/`. Skipping is free (you
-  keep your best, stay alive, lose nothing) while attempting risks elimination on three
-  misses, and clearing a bar you do not need is worth nothing when only the final
-  ranking counts. So a trailing player skips low bars to protect a shot at the one that
-  actually wins. Sharpest in pole vault, where even the opening bar of 10 carries a
-  13.6% elimination chance, against high jump's ~0.0004%.
+- [x] **~~Skipping a height is never chosen.~~ False for the pole vault.**
+  The original claim was that `p_clear` is monotone decreasing, so attempting `h` weakly
+  dominates skipping to `h+2`, making the skip branch dead code under solo EV. *Closed
+  2026-08-09 by a counterexample:* at height 34 with 32 already banked, attempting is worth
+  32.5197 and skipping 32.5326. Attempting clears only 22.9% of the time and the other
+  77.1% ends the event, forfeiting every shot at 36 and above; two marginal points do not
+  cover that. The dominance argument ignored that a failed attempt is *absorbing*. Pinned
+  in `twoplayer::polevault::tests::the_solo_player_does_sometimes_skip`. The solvers were
+  always right — `heights.rs` evaluates `better(skip, attempt)` — so every published
+  expected value already includes skipping; only this entry was wrong. *Watch for:* the
+  same argument is still untested for the **high jump**, where low bars clear with
+  probability ~1 and skipping may genuinely never pay. Do not assume it carries over in
+  either direction.
 
 ## Inferences the rulebook does not settle
 

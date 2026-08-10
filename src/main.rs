@@ -42,29 +42,43 @@ enum Command {
 }
 
 /// Print the two-player policy storage comparison.
+///
+/// Events must be solved back to front: each needs the value function of
+/// everything after it, and only the 1500m stands alone.
 fn storage_report() {
     use dice_decathlon::twoplayer::{
-        apply_turn_order, compress, javelin, m1500, Axis,
+        compress, javelin, m1500, polevault, Axis,
     };
 
-    // 1500m is last, so nothing follows it. Javelin is second to last and
-    // hands over to the 1500m with turn order already applied.
-    // 1500m keeps the full axis. The difference is a *state variable*
-    // here -- freezing a set folds its score straight into it -- so play
-    // starting from d >= 0 still visits negative differences. Only the
-    // entry value is restricted to the non-negative half, not the table.
-    let m15_axis = Axis::for_event(417, 88, 83);
-    // Only the non-negative half: the leader starts, so a first
-    // mover is never behind. The rest follows by relabelling.
-    let jav_axis = Axis::first_mover(Axis::for_event(387, 118, 30).hi);
+    /// Read a first-mover value function at any difference.
+    ///
+    /// The leading player starts, so a first mover is never behind and
+    /// the table only covers `d >= 0`; below zero the two players swap
+    /// roles. At a tie the rulebook's die roll makes it an even mix.
+    fn as_player(table: &[f64], axis: Axis, d: i32) -> f64 {
+        match d.signum() {
+            1 => table[axis.idx(d)],
+            -1 => 1.0 - table[axis.idx(-d)],
+            _ => 0.5,
+        }
+    }
 
-    let after_javelin_axis = Axis::symmetric(m15_axis.hi + 48);
-    let first = m1500::solve(after_javelin_axis);
-    let v9 = apply_turn_order(&first, after_javelin_axis);
-    let after = move |d: i32| v9[after_javelin_axis.idx(d)];
+    // 1500m keeps the full axis: the difference is a state variable there,
+    // so play starting level still visits negative differences.
+    let m15_axis = Axis::for_event(417, 88, 83);
+    let m15 = m1500::solve(m15_axis);
+    let v9 = move |d: i32| as_player(&m15, m15_axis, d);
+
+    // Javelin and pole vault hold the difference fixed while they run, so
+    // the non-negative half is the whole table.
+    let jav_axis = Axis::first_mover(Axis::for_event(387, 118, 30).hi);
+    let jav = javelin::solve_first_mover(jav_axis, &v9);
+    let v8 = move |d: i32| as_player(&jav, jav_axis, d);
+
+    let pv_axis = Axis::first_mover(Axis::for_event(339, 166, 48).hi);
 
     println!(
-        "{:9} {:>13} {:>12} {:>11} {:>10} {:>10}  {:>7}  {:>6}",
+        "{:10} {:>13} {:>12} {:>11} {:>10} {:>10}  {:>7}  {:>6}",
         "event",
         "states",
         "raw B",
@@ -77,7 +91,11 @@ fn storage_report() {
     println!("{}", compress::report("1500m", m1500::measure(m15_axis)));
     println!(
         "{}",
-        compress::report("javelin", javelin::measure(jav_axis, &after))
+        compress::report("javelin", javelin::measure(jav_axis, &v9))
+    );
+    println!(
+        "{}",
+        compress::report("polevault", polevault::measure(pv_axis, &v8))
     );
 }
 

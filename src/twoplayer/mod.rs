@@ -15,6 +15,7 @@ pub mod compress;
 pub mod freeze;
 pub mod javelin;
 pub mod m1500;
+pub mod polevault;
 pub mod reroll_sets;
 
 /// Values within this of each other count as tied, and values this close
