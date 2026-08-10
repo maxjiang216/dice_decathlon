@@ -100,7 +100,8 @@
     padding: .45rem; box-shadow: var(--shadow);
   }
   .die span { width: .55rem; height: .55rem; border-radius: 50%; background: var(--pip); align-self: center; justify-self: center; }
-  .die.six { outline: 2px solid var(--bad); outline-offset: 2px; }
+  /* The face that hurts in this event: colour the pips, not a ring. */
+  .die.warn span { background: var(--bad); }
 
   /* pip positions, by grid area */
   .p1 { grid-area: 1 / 1; } .p2 { grid-area: 1 / 3; }
@@ -179,10 +180,15 @@ const PIPS = {
 const app = document.getElementById("app");
 let session = null;
 
+// The face this event punishes, or null. A six only subtracts in the
+// 100m, 400m and 1500m; the shot put and pole vault are spoiled by a one;
+// in the discus a six is the best die on the table.
+let warnFace = null;
+
 function die(face) {
   const pips = PIPS[face].map((p) => `<span class="p${p}"></span>`).join("");
-  // A six is the thing you are trying to avoid freezing, so mark it.
-  return `<div class="die${face === 6 ? " six" : ""}" title="${face}">${pips}</div>`;
+  const bad = warnFace !== null && face === warnFace;
+  return `<div class="die${bad ? " warn" : ""}" title="${face}${bad ? " — costs you here" : ""}">${pips}</div>`;
 }
 
 function signed(n) {
@@ -247,6 +253,7 @@ function renderGroup(g) {
 
 function render() {
   const v = JSON.parse(session.view());
+  warnFace = v.warn_face ?? null;
   document.getElementById("title").textContent = v.name;
   const bits = [];
   if (v.attempt) bits.push(`Attempt ${v.attempt} of ${v.attempts_total}`);

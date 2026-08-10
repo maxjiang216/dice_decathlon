@@ -248,6 +248,8 @@ impl Game for Running {
             sheet: None,
             event_index: None,
             total: None,
+            // A six subtracts here unless the event is the hurdles.
+            warn_face: if r.six_penalty { Some(6) } else { None },
         }
     }
 

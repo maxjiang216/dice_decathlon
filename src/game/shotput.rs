@@ -154,6 +154,7 @@ impl Game for ShotPut {
             sheet: None,
             event_index: None,
             total: None,
+            warn_face: Some(1), // a one voids the attempt
         }
     }
 

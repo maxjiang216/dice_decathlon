@@ -221,6 +221,8 @@ impl Game for Ladder {
             sheet: None,
             event_index: None,
             total: None,
+            // Any one fails a pole vault jump; the high jump has no bad face.
+            warn_face: if r.ones_fail { Some(1) } else { None },
         }
     }
 

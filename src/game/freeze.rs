@@ -278,6 +278,7 @@ impl Game for Freeze {
             sheet: None,
             event_index: None,
             total: None,
+            warn_face: None,
         }
     }
 

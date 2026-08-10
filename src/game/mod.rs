@@ -116,6 +116,12 @@ pub struct View {
     pub event_index: Option<usize>,
     /// Total across the events already finished.
     pub total: Option<i32>,
+    /// The face that hurts in this event, if any, so the UI can mark it.
+    ///
+    /// A six is only bad where it subtracts — the 100m, 400m and 1500m.
+    /// In the discus a six is the *best* die you can freeze, and in the
+    /// shot put and pole vault it is a **one** that spoils things.
+    pub warn_face: Option<u8>,
 }
 
 /// A discipline that can be played move by move.
@@ -215,6 +221,23 @@ mod tests {
             assert_eq!(view.key, key);
             assert_eq!(view.name, name, "catalogue name disagrees for {key}");
             assert!(!view.choices.is_empty(), "{key} starts with no moves");
+        }
+    }
+
+    /// A six only costs you where it subtracts. Marking every six would
+    /// be wrong in six of the ten events — in the discus it is the best
+    /// die you can freeze.
+    #[test]
+    fn only_the_right_face_is_flagged() {
+        let mut rng = rng::Rng::new(77);
+        let want = |key: &str| match key {
+            "100m" | "400m" | "1500m" => Some(6),
+            "shotput" | "polevault" => Some(1),
+            _ => None,
+        };
+        for (key, _) in catalogue() {
+            let game = start(key, &mut rng).expect("engine exists");
+            assert_eq!(game.view().warn_face, want(key), "{key}");
         }
     }
 

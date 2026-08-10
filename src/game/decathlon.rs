@@ -101,6 +101,7 @@ impl Game for Decathlon {
                 sheet: None,
                 event_index: None,
                 total: None,
+                warn_face: None,
             },
             |g| g.view(),
         );
