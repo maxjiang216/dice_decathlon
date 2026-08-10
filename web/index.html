@@ -147,36 +147,16 @@
 <body>
 <main>
   <header>
-    <h1>100 Metres</h1>
-    <p class="sub">Reiner Knizia's Decathlon — 8 dice, 1 attempt</p>
+    <h1 id="title">Knizia's Decathlon</h1>
+    <p class="sub" id="subtitle">Pick an event</p>
   </header>
 
   <div id="app"><p class="sub">Loading…</p></div>
 
-  <div class="panel">
-    <details>
-      <summary>The rule, as written</summary>
-      <blockquote>
-        Divide the eight dice into two sets of four. Throw the first four dice.
-        If you are not satisfied with the result, pick up all four dice and
-        rethrow them. This can be repeated several times until you freeze the
-        first set. Then throw the other four dice and proceed in the same
-        manner. Try to freeze sets of dice with high values but which contain
-        no sixes.<br><br>
-        You have a maximum of seven throws, one initial throw for each set and
-        up to five rethrows which may be divided between the sets as desired.<br><br>
-        <b>Scoring:</b> Total the value of the dice for numbers one to five,
-        but subtract any sixes from the result.
-      </blockquote>
-      <p class="sub" style="margin-top:.8rem">
-        Optimal play scores <b>23.9975</b> on average (SD 6.19), between −48 and 40.
-      </p>
-    </details>
-  </div>
 </main>
 
 <script type="module">
-import init, { Session } from "./pkg/dice_decathlon.js";
+import init, { Session, catalogue } from "./pkg/dice_decathlon.js";
 
 // Pip layouts: which of the seven grid slots are filled, per face.
 const PIPS = {
@@ -218,6 +198,13 @@ function renderGroup(g) {
 
 function render() {
   const v = JSON.parse(session.view());
+  document.getElementById("title").textContent = v.name;
+  const bits = [];
+  if (v.attempt) bits.push(`Attempt ${v.attempt} of ${v.attempts_total}`);
+  if (v.bar !== null && v.bar !== undefined) bits.push(`Bar ${v.bar}`);
+  if (v.best) bits.push(`Best ${v.best}`);
+  document.getElementById("subtitle").textContent =
+    bits.length ? bits.join(" \u00b7 ") : "Reiner Knizia's Decathlon";
   const pool = Array.from({ length: v.rerolls_total }, (_, i) =>
     `<i class="${i < v.rerolls_left ? "on" : ""}"></i>`).join("");
 
@@ -256,18 +243,59 @@ function render() {
   });
   const again = app.querySelector("button[data-new]");
   if (again) again.onclick = newGame;
+  const back = document.createElement("div");
+  back.className = "panel actions";
+  back.innerHTML =
+    `<button data-menu="1">\u2190 All events</button>` +
+    `<button data-replay="1">New game</button>`;
+  app.appendChild(back);
+  back.querySelector("[data-menu]").onclick = showMenu;
+  back.querySelector("[data-replay]").onclick = newGame;
 }
 
-function newGame() {
-  // Seed from the browser's CSPRNG, kept under 2^53 so it survives the
-  // f64 trip across the wasm boundary intact.
-  const seed = Number(crypto.getRandomValues(new BigUint64Array(1))[0] >> 11n);
-  session = new Session("100m", seed);
+// Seed from the browser's CSPRNG, kept under 2^53 so it survives the
+// f64 trip across the wasm boundary intact.
+function freshSeed() {
+  return Number(crypto.getRandomValues(new BigUint64Array(1))[0] >> 11n);
+}
+
+let events = [];
+let current = null;
+
+function showMenu() {
+  session = null;
+  current = null;
+  document.getElementById("title").textContent = "Knizia's Decathlon";
+  document.getElementById("subtitle").textContent =
+    "Ten events. Pick one to play.";
+  app.innerHTML =
+    `<div class="panel"><div class="actions">` +
+    events
+      .map(
+        (e, i) =>
+          `<button class="${i === 0 ? "primary" : ""}" data-key="${e.key}">${e.name}</button>`
+      )
+      .join("") +
+    `</div></div>`;
+  app.querySelectorAll("button[data-key]").forEach((b) => {
+    b.onclick = () => startEvent(b.dataset.key);
+  });
+}
+
+function startEvent(key) {
+  current = key;
+  session = new Session(key, freshSeed());
   render();
 }
 
+function newGame() {
+  if (current) startEvent(current);
+  else showMenu();
+}
+
 await init();
-newGame();
+events = JSON.parse(catalogue());
+showMenu();
 </script>
 </body>
 </html>

@@ -125,18 +125,93 @@ pub trait Game {
 /// interactive engine exists for it yet.
 #[must_use]
 pub fn start(key: &str, rng: &mut rng::Rng) -> Option<Box<dyn Game>> {
-    running::rules(key)
-        .map(|r| Box::new(running::Running::new(r, rng)) as Box<dyn Game>)
+    if let Some(r) = running::rules(key) {
+        return Some(Box::new(running::Running::new(r, rng)));
+    }
+    if let Some(r) = ladder::rules(key) {
+        return Some(Box::new(ladder::Ladder::new(r, rng)));
+    }
+    if let Some(r) = freeze::rules(key) {
+        return Some(Box::new(freeze::Freeze::new(r, rng)));
+    }
+    match key {
+        "shotput" => Some(Box::new(shotput::ShotPut::new(rng))),
+        "longjump" => Some(Box::new(longjump::LongJump::new(rng))),
+        _ => None,
+    }
+}
+
+/// Playable disciplines as `(key, name)`, in rulebook order.
+///
+/// Kept in step with [`start`] by a test: a menu entry that cannot be
+/// started is worse than no entry at all.
+///
+/// The order is the order of play, which is what a menu should offer.
+#[must_use]
+pub fn catalogue() -> Vec<(&'static str, &'static str)> {
+    let mut out: Vec<(&'static str, &'static str)> = Vec::new();
+    for r in running::RUNNING {
+        out.push((r.key, r.name));
+    }
+    for r in ladder::LADDERS {
+        out.push((r.key, r.name));
+    }
+    for r in freeze::FREEZE {
+        out.push((r.key, r.name));
+    }
+    out.push(("shotput", "Shot Put"));
+    out.push(("longjump", "Long Jump"));
+    // Rulebook order, so the list reads like the competition.
+    let order = [
+        "100m",
+        "longjump",
+        "shotput",
+        "highjump",
+        "400m",
+        "110mh",
+        "discus",
+        "polevault",
+        "javelin",
+        "1500m",
+    ];
+    out.sort_by_key(|(k, _)| order.iter().position(|o| o == k).unwrap_or(99));
+    out
 }
 
 /// Keys of the disciplines that can currently be played interactively.
 #[must_use]
 pub fn playable() -> Vec<&'static str> {
-    running::RUNNING
-        .iter()
-        .map(|r| r.key)
-        .chain(ladder::LADDERS.iter().map(|r| r.key))
-        .chain(freeze::FREEZE.iter().map(|r| r.key))
-        .chain(["shotput", "longjump"])
-        .collect()
+    catalogue().into_iter().map(|(key, _)| key).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Every advertised discipline must actually start, and offer a move.
+    ///
+    /// The catalogue and `start` are separate lists, and they drifted
+    /// once already — the menu offered ten events while six of them threw
+    /// "no playable engine".
+    #[test]
+    fn everything_advertised_can_be_started() {
+        let mut rng = rng::Rng::new(4242);
+        let cat = catalogue();
+        assert_eq!(cat.len(), 10, "all ten events should be playable");
+        for (key, name) in cat {
+            let game = start(key, &mut rng)
+                .unwrap_or_else(|| panic!("no engine for {key}"));
+            let view = game.view();
+            assert_eq!(view.key, key);
+            assert_eq!(view.name, name, "catalogue name disagrees for {key}");
+            assert!(!view.choices.is_empty(), "{key} starts with no moves");
+        }
+    }
+
+    /// `playable` is just the catalogue's keys, so it cannot drift.
+    #[test]
+    fn playable_matches_the_catalogue() {
+        let keys: Vec<&str> = catalogue().into_iter().map(|(k, _)| k).collect();
+        assert_eq!(playable(), keys);
+    }
 }
