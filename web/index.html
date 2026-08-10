@@ -142,6 +142,14 @@
   ol.log li { margin-bottom: .15rem; }
   ol.log li:last-child { color: var(--ink); }
   .pos { color: var(--good); } .neg { color: var(--bad); }
+
+.pick { cursor: pointer; display: inline-block; border-radius: 12px;
+        padding: 3px; transition: outline-color .12s, transform .12s;
+        outline: 2px solid transparent; }
+.pick:hover { transform: translateY(-2px); }
+.pick.on { outline-color: currentColor; }
+.held { opacity: .55; display: inline-block; padding: 3px; }
+button[disabled] { opacity: .45; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -182,12 +190,53 @@ function signed(n) {
   return `<span class="${cls}">${n > 0 ? "+" : ""}${n}</span>`;
 }
 
+// Dice the player has picked out to freeze, as indices into the loose
+// (unfrozen) dice of the active group. Cleared whenever the position
+// changes, since the indices only mean anything for one throw.
+let picked = new Set();
+
+// The Keep choices the engine offers, deduplicated on (count, sum). A
+// selection is legal exactly when some offered Keep agrees with it on
+// both, which is why we can let the player click any dice they like and
+// still only ever send a move the engine will accept.
+function keepChoices(v) {
+  return v.choices
+    .map((c, i) => ({ c, i }))
+    .filter((x) => x.c.action.kind === "keep");
+}
+
+function looseDice(v) {
+  const g = v.groups.find((g) => g.active);
+  return g ? g.dice.filter((d) => !d.frozen) : [];
+}
+
+// Index into `v.choices` of the Keep matching the current selection, or
+// -1 if this selection is not a legal freeze.
+function matchingKeep(v) {
+  const loose = looseDice(v);
+  const sum = [...picked].reduce((a, i) => a + loose[i].face, 0);
+  for (const { c, i } of keepChoices(v)) {
+    const other = c.action.dice;
+    const osum = other.reduce((a, j) => a + loose[j].face, 0);
+    if (other.length === picked.size && osum === sum) return i;
+  }
+  return -1;
+}
+
 function renderGroup(g) {
   let body;
   if (g.score !== null && g.score !== undefined) {
     body = `<div class="dice"><div class="frozen-score">frozen for <b>${signed(g.score)}</b></div></div>`;
   } else if (g.dice.length) {
-    body = `<div class="dice">${g.dice.map((d) => die(d.face)).join("")}</div>`;
+    let loose = -1;
+    body = `<div class="dice">${g.dice
+      .map((d) => {
+        if (d.frozen) return `<span class="held">${die(d.face)}</span>`;
+        loose += 1;
+        const on = picked.has(loose);
+        return `<span class="pick${on ? " on" : ""}" data-loose="${loose}">${die(d.face)}</span>`;
+      })
+      .join("")}</div>`;
   } else {
     body = `<div class="dice"><span class="placeholder">not thrown yet</span></div>`;
   }
@@ -221,9 +270,30 @@ function render() {
          <div class="l">points</div>
        </div>`;
 
-  const buttons = v.choices.map((c, i) =>
-    `<button class="${i === 0 ? "primary" : ""}" data-i="${i}" title="${c.detail}">${c.label}</button>`
-  ).join("");
+  // Freezing is done by clicking dice, so the long deduplicated Keep list
+  // is replaced by one confirm button; everything else stays a button.
+  const keeps = keepChoices(v);
+  const plain = v.choices
+    .map((c, i) => ({ c, i }))
+    .filter((x) => x.c.action.kind !== "keep");
+  let buttons = "";
+  if (keeps.length) {
+    const match = matchingKeep(v);
+    const loose = looseDice(v);
+    const sum = [...picked].reduce((a, i) => a + loose[i].face, 0);
+    buttons +=
+      `<button class="primary" data-i="${match}" ${match < 0 ? "disabled" : ""}>` +
+      (picked.size
+        ? `Freeze ${picked.size} die${picked.size > 1 ? "s" : ""} (+${sum})`
+        : `Click dice to freeze`) +
+      `</button>`;
+  }
+  buttons += plain
+    .map(
+      (x, n) =>
+        `<button class="${!keeps.length && n === 0 ? "primary" : ""}" data-i="${x.i}" title="${x.c.detail}">${x.c.label}</button>`
+    )
+    .join("");
 
   const actions = v.result === null
     ? `<div class="panel actions">${buttons}</div>`
@@ -235,9 +305,20 @@ function render() {
     <div class="panel"><div class="set-head">Race log</div>
       <ol class="log">${v.log.map((l) => `<li>${l}</li>`).join("")}</ol></div>`;
 
+  app.querySelectorAll("[data-loose]").forEach((el) => {
+    el.onclick = () => {
+      const i = Number(el.dataset.loose);
+      if (picked.has(i)) picked.delete(i);
+      else picked.add(i);
+      render();
+    };
+  });
   app.querySelectorAll("button[data-i]").forEach((b) => {
     b.onclick = () => {
-      session.apply(JSON.stringify(v.choices[b.dataset.i].action));
+      const i = Number(b.dataset.i);
+      if (i < 0) return;
+      session.apply(JSON.stringify(v.choices[i].action));
+      picked = new Set(); // indices only mean anything for one throw
       render();
     };
   });
@@ -304,6 +385,7 @@ function showMenu() {
 }
 
 function startEvent(key) {
+  picked = new Set();
   current = key;
   session = new Session(key, freshSeed());
   render();
