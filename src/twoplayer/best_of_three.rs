@@ -65,15 +65,21 @@ pub fn solve_first_mover(
                         // Scoring `s` replaces the mover's best with
                         // max(best, s) — a foul scores 0 and so leaves
                         // it alone.
+                        // The table is the *first* mover's win probability
+                        // throughout, so the second mover maximises its
+                        // complement and the result is flipped back.
                         for (s, slot) in payoff.iter_mut().enumerate() {
-                            *slot = if first_to_move {
+                            let v = if first_to_move {
                                 value[a.max(s) * bests + b]
                             } else {
                                 value[a * bests + b.max(s)]
                             };
+                            *slot = if first_to_move { v } else { 1.0 - v };
                         }
                         let floor = if first_to_move { a } else { b };
-                        next[a * bests + b] = attempt.expected(&payoff, floor);
+                        let got = attempt.expected(&payoff, floor);
+                        next[a * bests + b] =
+                            if first_to_move { got } else { 1.0 - got };
                     }
                 }
                 value = next;
@@ -174,24 +180,29 @@ pub fn measure(
             let mut payoff = vec![0.0f64; bests];
             for &a in &live {
                 for &b in &live {
+                    // As above: the second mover plays against the
+                    // stored value, not with it.
                     for (s, slot) in payoff.iter_mut().enumerate() {
-                        *slot = if first_to_move {
+                        let v = if first_to_move {
                             value[a.max(s) * bests + b]
                         } else {
                             value[a * bests + b.max(s)]
                         };
+                        *slot = if first_to_move { v } else { 1.0 - v };
                     }
                     let own = if first_to_move { a } else { b };
                     let src = (left * bests + own) * nodes;
                     baseline.copy_from_slice(&ev[src..src + nodes]);
                     let dst = ((phase * bests + a) * bests + b) * nodes;
-                    next[a * bests + b] = attempt.expected_vs_baseline(
+                    let got = attempt.expected_vs_baseline(
                         &payoff,
                         own,
                         &baseline,
                         &mut chosen[dst..dst + nodes],
                         &mut deviates[dst..dst + nodes],
                     );
+                    next[a * bests + b] =
+                        if first_to_move { got } else { 1.0 - got };
                 }
             }
             value = next;

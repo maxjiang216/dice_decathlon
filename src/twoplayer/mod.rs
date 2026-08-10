@@ -13,6 +13,7 @@
 
 pub mod attempt;
 pub mod best_of_three;
+pub mod chain;
 pub mod compress;
 pub mod discus;
 pub mod freeze;

@@ -31,6 +31,8 @@ enum Command {
     },
     /// Compare two-player policy storage across compression schemes.
     Storage,
+    /// Solve the whole competition and print the value of a lead.
+    Chain,
     /// Solve disciplines and write artifacts under the output dir.
     Analyze {
         /// Discipline key, or omit to analyze all of them.
@@ -171,6 +173,7 @@ fn main() -> ExitCode {
     let cli = Cli::parse();
     match cli.command {
         Command::Storage => storage_report(),
+        Command::Chain => chain_report(),
         Command::List => {
             for (key, _) in disciplines::registry() {
                 println!("{key}");
@@ -208,4 +211,25 @@ fn main() -> ExitCode {
         }
     }
     ExitCode::SUCCESS
+}
+
+/// Solve the whole competition and print what each score difference is
+/// worth entering each event.
+fn chain_report() {
+    use dice_decathlon::twoplayer::chain::Chain;
+
+    let chain = Chain::solve();
+    println!("Win probability of the player about to start each event.\n");
+    print!("{:>5}", "d");
+    for key in Chain::keys() {
+        print!("{key:>10}");
+    }
+    println!();
+    for d in [-40, -20, -10, -3, 0, 3, 10, 20, 40] {
+        print!("{d:>5}");
+        for (e, _) in Chain::keys().iter().enumerate() {
+            print!("{:>10.4}", chain.value(e, d));
+        }
+        println!();
+    }
 }

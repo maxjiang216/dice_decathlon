@@ -133,7 +133,14 @@ pub fn solve_first_mover(
                         cur[l.idx(s)] = if s.alive[mover] {
                             let (skip, attempt) =
                                 branches(l, &next, i, s, mover);
-                            skip.max(attempt)
+                            // The table is the first mover's win
+                            // probability, so the second mover picks the
+                            // branch that lowers it.
+                            if mover == 0 {
+                                skip.max(attempt)
+                            } else {
+                                skip.min(attempt)
+                            }
                         } else {
                             next[l.idx(s)]
                         };
@@ -220,21 +227,28 @@ pub fn measure(
                         continue;
                     }
                     let (skip, attempt) = branches(l, &next, i, s, mover);
-                    cur[l.idx(s)] = skip.max(attempt);
+                    // As above: the second mover plays against the value.
+                    cur[l.idx(s)] = if mover == 0 {
+                        skip.max(attempt)
+                    } else {
+                        skip.min(attempt)
+                    };
                     if !reached(i, &s) {
                         continue;
                     }
                     let ev_prefers_skip = ev_skip[i * (n + 1) + s.best[mover]];
-                    let used = if ev_prefers_skip { skip } else { attempt };
-                    let dev =
-                        super::compress::is_deviation(skip.max(attempt), used);
+                    // Compare from the mover's own side.
+                    let (sk, at_) = if mover == 0 {
+                        (skip, attempt)
+                    } else {
+                        (1.0 - skip, 1.0 - attempt)
+                    };
+                    let used = if ev_prefers_skip { sk } else { at_ };
+                    let dev = super::compress::is_deviation(sk.max(at_), used);
                     let at = offset[i] + written;
                     deviates[at] = dev;
-                    chosen[at] = u8::from(if dev {
-                        skip > attempt
-                    } else {
-                        ev_prefers_skip
-                    });
+                    chosen[at] =
+                        u8::from(if dev { sk > at_ } else { ev_prefers_skip });
                     written += 1;
                 }
                 next = cur;
