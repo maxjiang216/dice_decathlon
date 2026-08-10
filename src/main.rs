@@ -47,7 +47,8 @@ enum Command {
 /// everything after it, and only the 1500m stands alone.
 fn storage_report() {
     use dice_decathlon::twoplayer::{
-        compress, discus, highjump, javelin, m1500, polevault, running, Axis,
+        compress, discus, highjump, javelin, longjump, m1500, polevault,
+        running, shotput, Axis,
     };
 
     /// Read a first-mover value function at any difference.
@@ -96,6 +97,19 @@ fn storage_report() {
     let v4 = move |d: i32| as_player(&f400, m400_axis, d);
 
     let hj_axis = Axis::first_mover(Axis::for_event(166, 339, 30).hi);
+    let hj = highjump::solve_first_mover(hj_axis, &v4);
+    let v3 = move |d: i32| as_player(&hj, hj_axis, d);
+
+    let sp_axis = Axis::first_mover(Axis::for_event(118, 387, 48).hi);
+    let sp = shotput::solve_first_mover(sp_axis, &v3);
+    let v2 = move |d: i32| as_player(&sp, sp_axis, d);
+
+    let lj_axis = Axis::first_mover(Axis::for_event(88, 417, 30).hi);
+    let lj = longjump::solve_first_mover(lj_axis, &v2);
+    let v1 = move |d: i32| as_player(&lj, lj_axis, d);
+
+    let m100_axis = Axis::for_event(0, 505, 68);
+    let m100 = running::m100();
 
     println!(
         "{:10} {:>13} {:>12} {:>11} {:>10} {:>10}  {:>7}  {:>6}",
@@ -130,6 +144,15 @@ fn storage_report() {
         "{}",
         compress::report("highjump", highjump::measure(hj_axis, &v4))
     );
+    println!(
+        "{}",
+        compress::report("shotput", shotput::measure(sp_axis, &v3))
+    );
+    println!(
+        "{}",
+        compress::report("longjump", longjump::measure(lj_axis, &v2))
+    );
+    println!("{}", compress::report("100m", m100.measure(m100_axis, &v1)));
 }
 
 fn report(solved: &Solved) {

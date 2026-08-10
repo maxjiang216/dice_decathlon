@@ -393,6 +393,44 @@ fn factorial(n: u32) -> u64 {
     (1..=u64::from(n)).product::<u64>().max(1)
 }
 
+impl super::attempt::AttemptEngine for Attempt {
+    fn max_score(&self) -> usize {
+        MAX_SCORE as usize
+    }
+    fn nodes(&self) -> usize {
+        self.nodes
+    }
+    fn reachable_scores(&self) -> &[bool] {
+        &self.reachable_scores
+    }
+    fn live_nodes(&self, floor: usize) -> usize {
+        Self::live_nodes(self, floor)
+    }
+    fn expected(&self, payoff: &[f64], floor: usize) -> f64 {
+        Self::expected(self, payoff, floor)
+    }
+    fn expected_with_policy(
+        &self,
+        payoff: &[f64],
+        floor: usize,
+        policy: &mut [u8],
+    ) -> f64 {
+        Self::expected_with_policy(self, payoff, floor, policy)
+    }
+    fn expected_vs_baseline(
+        &self,
+        payoff: &[f64],
+        floor: usize,
+        baseline: &[u8],
+        chosen: &mut [u8],
+        deviates: &mut [bool],
+    ) -> f64 {
+        Self::expected_vs_baseline(
+            self, payoff, floor, baseline, chosen, deviates,
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
