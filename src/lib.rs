@@ -34,6 +34,7 @@ pub mod disciplines;
 pub mod dp;
 pub mod game;
 pub mod policy;
+pub mod twoplayer;
 
 #[cfg(feature = "wasm")]
 pub mod wasm;
