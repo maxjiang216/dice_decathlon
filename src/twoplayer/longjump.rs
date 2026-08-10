@@ -54,6 +54,11 @@ struct RunThrow {
 pub struct LongJump {
     /// Reachable `(frozen count, frozen sum)` run-up positions.
     runup: Vec<(usize, i32)>,
+    /// `runup_at[nf * (LIMIT + 1) + fs]` indexes into `runup`, or
+    /// `usize::MAX` where that position is unreachable. Freezing dice is
+    /// the inner loop of the whole solver, so this replaces a linear
+    /// search over `runup` for the successor position.
+    runup_at: Vec<usize>,
     /// Throws for each run-up position, in the same order.
     run_throws: Vec<Vec<RunThrow>>,
     /// Throws of `r` dice during the jump; index 0 unused.
@@ -150,6 +155,11 @@ impl LongJump {
             }
         }
 
+        let mut runup_at = vec![usize::MAX; DICE * (LIMIT as usize + 1)];
+        for (i, &(nf, fs)) in runup.iter().enumerate() {
+            runup_at[nf * (LIMIT as usize + 1) + fs as usize] = i;
+        }
+
         let mut run_throws = Vec::new();
         for &(nf, fs) in &runup {
             let budget = LIMIT - fs;
@@ -221,6 +231,7 @@ impl LongJump {
         }
         Self {
             runup,
+            runup_at,
             run_throws,
             jump_throws,
             jump_cap,
@@ -363,11 +374,13 @@ impl LongJump {
                     let v = if nf + k == DICE {
                         jump[DICE][0]
                     } else {
-                        let target = (nf + k, fs + added);
-                        self.runup
-                            .iter()
-                            .position(|p| *p == target)
-                            .map_or(payoff[0], |ix| runup[ix])
+                        let slot = self.runup_at
+                            [(nf + k) * (LIMIT as usize + 1) + (fs + added) as usize];
+                        if slot == usize::MAX {
+                            payoff[0] // stepped over
+                        } else {
+                            runup[slot]
+                        }
                     };
                     if v > top {
                         top = v;
