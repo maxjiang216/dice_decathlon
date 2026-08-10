@@ -174,12 +174,12 @@ impl Freeze {
                 "No {} die — invalid attempt, scores 0.",
                 self.rules.parity
             ));
-            self.end_attempt(rng, 0);
+            self.end_attempt(0);
         }
     }
 
     /// Bank `score` for the attempt and start the next, if any.
-    fn end_attempt(&mut self, rng: &mut Rng, score: i32) {
+    fn end_attempt(&mut self, score: i32) {
         self.best = self.best.max(score);
         self.played += 1;
         self.kept.clear();
@@ -190,7 +190,6 @@ impl Freeze {
             self.log.push(format!("Best of three: {}", self.best));
         } else {
             // The next attempt's opening throw waits to be acknowledged.
-            let _ = rng;
             self.pending = true;
         }
     }
@@ -338,7 +337,7 @@ impl Game for Freeze {
                 if self.kept.len() == self.rules.dice {
                     let score = self.banked();
                     self.log.push(format!("All dice frozen — {score}."));
-                    self.end_attempt(rng, score);
+                    self.end_attempt(score);
                 } else {
                     self.deciding = true;
                 }
@@ -350,7 +349,7 @@ impl Game for Freeze {
                 }
                 let score = self.banked();
                 self.log.push(format!("Stopped on {score}."));
-                self.end_attempt(rng, score);
+                self.end_attempt(score);
                 true
             }
             Action::Reroll => {

@@ -102,7 +102,7 @@ impl LongJump {
     }
 
     /// Bank `score` and start the next attempt, if any.
-    fn end_attempt(&mut self, rng: &mut Rng, score: i32) {
+    fn end_attempt(&mut self, score: i32) {
         self.best = self.best.max(score);
         self.played += 1;
         self.kept.clear();
@@ -111,7 +111,6 @@ impl LongJump {
             self.log.push(format!("Best of three: {}", self.best));
         } else {
             // The next run-up waits to be acknowledged.
-            let _ = rng;
             self.pending = true;
         }
     }
@@ -327,7 +326,7 @@ impl Game for LongJump {
                         "Stepped over at {} — invalid attempt.",
                         self.frozen_total()
                     ));
-                    self.end_attempt(rng, 0);
+                    self.end_attempt(0);
                     return true;
                 }
                 if self.table.is_empty() {
@@ -336,7 +335,7 @@ impl Game for LongJump {
                     } else {
                         let score = self.frozen_total();
                         self.log.push(format!("Jumped {score}."));
-                        self.end_attempt(rng, score);
+                        self.end_attempt(score);
                     }
                 } else {
                     self.deciding = true;

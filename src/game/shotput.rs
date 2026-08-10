@@ -66,7 +66,7 @@ impl ShotPut {
                 "Attempt {}: threw a 1 — invalid, scores 0.",
                 self.played + 1
             ));
-            self.end_attempt(rng, 0);
+            self.end_attempt(0);
             return;
         }
         self.thrown.push(face);
@@ -79,12 +79,12 @@ impl ShotPut {
         if self.thrown.len() == DICE {
             let score = self.running();
             self.log.push(format!("All eight thrown — {score}."));
-            self.end_attempt(rng, score);
+            self.end_attempt(score);
         }
     }
 
     /// Bank `score` and start the next attempt, if any.
-    fn end_attempt(&mut self, rng: &mut Rng, score: i32) {
+    fn end_attempt(&mut self, score: i32) {
         self.best = self.best.max(score);
         self.played += 1;
         self.thrown.clear();
@@ -94,7 +94,6 @@ impl ShotPut {
             // The next attempt's compulsory first die waits for the
             // player: fouling it is the single most surprising thing this
             // event does, and it should not happen off-screen.
-            let _ = rng;
             self.pending = true;
         }
     }
@@ -196,7 +195,7 @@ impl Game for ShotPut {
             Action::Stop => {
                 let score = self.running();
                 self.log.push(format!("Stopped on {score}."));
-                self.end_attempt(rng, score);
+                self.end_attempt(score);
                 true
             }
             Action::Freeze
