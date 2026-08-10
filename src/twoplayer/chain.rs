@@ -180,18 +180,18 @@ impl Chain {
                 first_mover: first_mover.clone(),
             };
             let after = move |d: i32| solved.value(e + 1, d);
-            let axis = axes[e];
+            let span = axes[e];
             first_mover[e] = match EVENTS[e].key {
-                "100m" => running::m100().solve_first_mover(axis, &after),
-                "longjump" => longjump::solve_first_mover(axis, &after),
-                "shotput" => shotput::solve_first_mover(axis, &after),
-                "highjump" => highjump::solve_first_mover(axis, &after),
-                "400m" => running::m400().solve_first_mover(axis, &after),
-                "110mh" => running::hurdles().solve_first_mover(axis, &after),
-                "discus" => discus::solve_first_mover(axis, &after),
-                "polevault" => polevault::solve_first_mover(axis, &after),
-                "javelin" => javelin::solve_first_mover(axis, &after),
-                _ => running::m1500().solve_first_mover(axis, &after),
+                "100m" => running::m100().solve_first_mover(span, &after),
+                "longjump" => longjump::solve_first_mover(span, &after),
+                "shotput" => shotput::solve_first_mover(span, &after),
+                "highjump" => highjump::solve_first_mover(span, &after),
+                "400m" => running::m400().solve_first_mover(span, &after),
+                "110mh" => running::hurdles().solve_first_mover(span, &after),
+                "discus" => discus::solve_first_mover(span, &after),
+                "polevault" => polevault::solve_first_mover(span, &after),
+                "javelin" => javelin::solve_first_mover(span, &after),
+                _ => running::m1500().solve_first_mover(span, &after),
             };
         }
         Self { axes, first_mover }
