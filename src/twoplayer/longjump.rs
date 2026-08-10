@@ -374,8 +374,9 @@ impl LongJump {
                     let v = if nf + k == DICE {
                         jump[DICE][0]
                     } else {
-                        let slot = self.runup_at
-                            [(nf + k) * (LIMIT as usize + 1) + (fs + added) as usize];
+                        let slot = self.runup_at[(nf + k)
+                            * (LIMIT as usize + 1)
+                            + (fs + added) as usize];
                         if slot == usize::MAX {
                             payoff[0] // stepped over
                         } else {
