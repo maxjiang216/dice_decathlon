@@ -9,7 +9,8 @@
 //! so the leader plays all eight dice, then the trailer plays theirs
 //! knowing exactly what they must beat.
 
-use super::{clamp_prob, final_payoff, reroll_sets::RerollSets, Axis};
+use super::reroll_sets::{Decision, RerollSets};
+use super::{clamp_prob, final_payoff, Axis};
 
 /// Eight dice thrown one at a time, five shared rerolls, a six
 /// subtracts six.
@@ -56,6 +57,62 @@ pub fn solve(axis: Axis) -> Vec<f64> {
     let terminal = move |n: i32| 1.0 - second[wide.idx(-n)];
     let v = event().solve(axis, &terminal);
     v.into_iter().map(clamp_prob).collect()
+}
+
+/// Measure how far the 1500m's two-player policy compresses.
+///
+/// The EV-optimal policy is the same dynamic program with the identity
+/// as its terminal payoff: maximising the final difference is exactly
+/// maximising the event score.
+pub fn measure(axis: Axis) -> super::compress::Stats {
+    let ev = event();
+    let identity = |n: i32| f64::from(n);
+    let ev_layers = ev.solve_layers(axis, &identity);
+
+    let wide = Axis::symmetric(axis.hi + 48);
+    let second = second_mover(wide);
+    let terminal = move |n: i32| 1.0 - second[wide.idx(-n)];
+    let layers = ev.solve_layers(axis, &terminal);
+
+    let sets = ev.sets as usize;
+    let nr = ev.rerolls as usize + 1;
+    let scores = ev.set_scores.len();
+    let control = sets * nr * scores;
+    let mut runs = super::compress::RunCounter::new(control);
+    let mut chosen = vec![0u8; control];
+    let mut deviates = vec![false; control];
+
+    for n in axis.iter() {
+        let mut i = 0;
+        for set in 0..sets {
+            for r in 0..nr {
+                for &(score, _) in &ev.set_scores {
+                    let at = Decision { set, r, score, n };
+                    let (f, rr) =
+                        ev.branch_values(&layers, axis, &terminal, at);
+                    let (ef, err) =
+                        ev.branch_values(&ev_layers, axis, &identity, at);
+                    let ev_freeze = ef >= err;
+                    let best = f.max(rr);
+                    let used = if ev_freeze { f } else { rr };
+                    let dev = super::compress::is_deviation(best, used);
+                    deviates[i] = dev;
+                    chosen[i] = u8::from(if dev { f >= rr } else { ev_freeze });
+                    i += 1;
+                }
+            }
+        }
+        runs.push(&chosen, &deviates);
+    }
+
+    super::compress::Stats {
+        control: control as u64,
+        axis: axis.len() as u64,
+        deviations: runs.deviations,
+        dev_control: runs.dev_control(),
+        action_bits: 1,
+        idx_bytes: 1,
+    }
 }
 
 #[cfg(test)]

@@ -11,6 +11,9 @@
 //! alternatives at a tolerance of [`EPS`], which is below `f32`
 //! resolution near 1.0, and values are chained through ten events.
 
+pub mod compress;
+pub mod freeze;
+pub mod javelin;
 pub mod m1500;
 pub mod reroll_sets;
 
@@ -55,6 +58,19 @@ impl Axis {
             lo: -half,
             hi: half,
         }
+    }
+
+    /// The non-negative half, `0 ..= half`.
+    ///
+    /// This is all a *first mover* ever needs. The rulebook has the
+    /// leading player start, so whoever moves first is by definition not
+    /// behind, and a first-mover value function is never queried at a
+    /// negative difference. Positions where our player moves second are
+    /// reached by relabelling — see [`apply_turn_order`] — not by
+    /// mirroring the value function, which would be wrong: moving second
+    /// carries an information advantage, so `F` is genuinely asymmetric.
+    pub const fn first_mover(half: i32) -> Self {
+        Self { lo: 0, hi: half }
     }
 
     /// Axis wide enough for an event, given how far `d` can already have
@@ -108,4 +124,24 @@ pub const fn final_payoff(d: i32) -> f64 {
         0 => 0.5,
         _ => 0.0,
     }
+}
+
+/// Turn the *first mover's* win probability into the win probability of
+/// a nominated player, applying the rulebook's turn-order rule.
+///
+/// > "From the second discipline onwards, the leading player always
+/// > starts... Ties are resolved by the throw of a die."
+///
+/// With two players "who leads" is the sign of `d`, so no extra state is
+/// needed. At a tie the die roll makes it an even mix of both orderings,
+/// which is exactly a half.
+pub fn apply_turn_order(first_mover: &[f64], axis: Axis) -> Vec<f64> {
+    axis.iter()
+        .map(|d| match d.signum() {
+            1 => first_mover[axis.idx(d)],
+            -1 => 1.0 - first_mover[axis.idx(-d)],
+            _ => 0.5,
+        })
+        .map(clamp_prob)
+        .collect()
 }

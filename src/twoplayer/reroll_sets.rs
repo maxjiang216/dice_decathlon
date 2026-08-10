@@ -12,6 +12,19 @@
 //! already folded in. Scores add, so nothing else need be carried.
 
 use super::Axis;
+
+/// Where in an event a decision is being taken.
+#[derive(Clone, Copy)]
+pub struct Decision {
+    /// Index of the set being decided.
+    pub set: usize,
+    /// Rerolls still in the shared pool.
+    pub r: usize,
+    /// Score showing on the set just thrown.
+    pub score: i32,
+    /// Running difference with earlier sets already folded in.
+    pub n: i32,
+}
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 /// Geometry and scoring of one reroll-set event.
@@ -64,11 +77,13 @@ impl RerollSets {
     /// `(set, rerolls)` layer every difference is an independent
     /// problem, and the layers are ordered so each depends only on ones
     /// already complete.
-    pub fn solve(
+    /// As [`RerollSets::solve`], but keeps every layer so a policy can
+    /// be read back off it.
+    pub fn solve_layers(
         &self,
         axis: Axis,
         terminal: &(dyn Fn(i32) -> f64 + Sync),
-    ) -> Vec<f64> {
+    ) -> Vec<Vec<Vec<f64>>> {
         let sets = self.sets as usize;
         let nr = self.rerolls as usize + 1;
         let width = axis.len();
@@ -117,6 +132,43 @@ impl RerollSets {
             }
         }
 
-        layer[0][nr - 1].clone()
+        layer
+    }
+
+    /// Win probability at the start of the event, for every difference
+    /// on `axis`.
+    pub fn solve(
+        &self,
+        axis: Axis,
+        terminal: &(dyn Fn(i32) -> f64 + Sync),
+    ) -> Vec<f64> {
+        let layers = self.solve_layers(axis, terminal);
+        layers[0][self.rerolls as usize].clone()
+    }
+
+    /// Value of freezing, and of rerolling, at one decision point.
+    ///
+    /// Rerolling is unavailable with an empty pool, reported as
+    /// negative infinity so it never wins a comparison.
+    pub fn branch_values(
+        &self,
+        layers: &[Vec<Vec<f64>>],
+        axis: Axis,
+        terminal: &dyn Fn(i32) -> f64,
+        at: Decision,
+    ) -> (f64, f64) {
+        let Decision { set, r, score, n } = at;
+        let after = n + score;
+        let freeze = if set + 1 < self.sets as usize {
+            layers[set + 1][r][axis.idx(after)]
+        } else {
+            terminal(after)
+        };
+        let reroll = if r > 0 {
+            layers[set][r - 1][axis.idx(n)]
+        } else {
+            f64::NEG_INFINITY
+        };
+        (freeze, reroll)
     }
 }

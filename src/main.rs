@@ -29,6 +29,8 @@ enum Command {
         /// Discipline key, e.g. `100m` (see `list`).
         key: String,
     },
+    /// Compare two-player policy storage across compression schemes.
+    Storage,
     /// Solve disciplines and write artifacts under the output dir.
     Analyze {
         /// Discipline key, or omit to analyze all of them.
@@ -37,6 +39,46 @@ enum Command {
         #[arg(long, default_value = "output")]
         out: PathBuf,
     },
+}
+
+/// Print the two-player policy storage comparison.
+fn storage_report() {
+    use dice_decathlon::twoplayer::{
+        apply_turn_order, compress, javelin, m1500, Axis,
+    };
+
+    // 1500m is last, so nothing follows it. Javelin is second to last and
+    // hands over to the 1500m with turn order already applied.
+    // 1500m keeps the full axis. The difference is a *state variable*
+    // here -- freezing a set folds its score straight into it -- so play
+    // starting from d >= 0 still visits negative differences. Only the
+    // entry value is restricted to the non-negative half, not the table.
+    let m15_axis = Axis::for_event(417, 88, 83);
+    // Only the non-negative half: the leader starts, so a first
+    // mover is never behind. The rest follows by relabelling.
+    let jav_axis = Axis::first_mover(Axis::for_event(387, 118, 30).hi);
+
+    let after_javelin_axis = Axis::symmetric(m15_axis.hi + 48);
+    let first = m1500::solve(after_javelin_axis);
+    let v9 = apply_turn_order(&first, after_javelin_axis);
+    let after = move |d: i32| v9[after_javelin_axis.idx(d)];
+
+    println!(
+        "{:9} {:>13} {:>12} {:>11} {:>10} {:>10}  {:>7}  {:>6}",
+        "event",
+        "states",
+        "raw B",
+        "packed B",
+        "dense B",
+        "sparse B",
+        "deviate",
+        "best"
+    );
+    println!("{}", compress::report("1500m", m1500::measure(m15_axis)));
+    println!(
+        "{}",
+        compress::report("javelin", javelin::measure(jav_axis, &after))
+    );
 }
 
 fn report(solved: &Solved) {
@@ -54,6 +96,7 @@ fn report(solved: &Solved) {
 fn main() -> ExitCode {
     let cli = Cli::parse();
     match cli.command {
+        Command::Storage => storage_report(),
         Command::List => {
             for (key, _) in disciplines::registry() {
                 println!("{key}");
