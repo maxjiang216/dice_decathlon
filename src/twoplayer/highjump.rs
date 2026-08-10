@@ -4,6 +4,19 @@
 //! Structurally identical to the pole vault but far safer at the bottom
 //! of the ladder: the opening bar of 10 clears with probability
 //! 0.999996, against the pole vault's 0.864.
+//!
+//! **The high jump has no decisions.** Its only choice is attempt or
+//! skip, and attempting always wins, so the policy is the constant
+//! "attempt" — under expected value *and* under win probability, which
+//! measures zero deviating states. Two things compound to make that so:
+//! skipping is never the EV play here, and the event sits six disciplines
+//! from the end, so with that much swing still to come the value function
+//! is near-linear across the ±30 the event can move and win probability
+//! agrees with expected value regardless.
+//!
+//! So its tiny policy is not a compression result; there is simply
+//! nothing to store. Deviation grows as the game shortens — 0.00% here,
+//! 1.03% for the pole vault with two events left, 6.32% for the 1500m.
 
 use super::compress::Stats;
 use super::ladder::Ladder;
