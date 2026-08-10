@@ -42,6 +42,13 @@ pub enum Action {
     /// Take a jump at the current bar. `dice` is how many to throw,
     /// which only the pole vault lets you choose.
     Attempt { dice: Option<u8> },
+    /// Throw the dice the rules oblige you to throw.
+    ///
+    /// Some throws are not a decision — the opening throw of a set, the
+    /// compulsory first die of a shot put attempt — but they still need
+    /// acknowledging, or their result flashes past unseen. This is the
+    /// button that does it.
+    Roll,
     /// Lock the named dice (indices into the dice on the table) and
     /// keep the attempt alive.
     Keep { dice: Vec<u8> },

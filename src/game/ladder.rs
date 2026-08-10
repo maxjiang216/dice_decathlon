@@ -276,7 +276,8 @@ impl Game for Ladder {
             Action::Freeze
             | Action::Reroll
             | Action::Keep { .. }
-            | Action::Stop => false,
+            | Action::Stop
+            | Action::Roll => false,
         }
     }
 }

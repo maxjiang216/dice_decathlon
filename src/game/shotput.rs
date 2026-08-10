@@ -25,6 +25,8 @@ pub struct ShotPut {
     played: u32,
     /// Faces thrown so far this attempt, none of them a one.
     thrown: Vec<u8>,
+    /// True when an attempt's compulsory first die is due.
+    pending: bool,
     log: Vec<String>,
 }
 
@@ -35,9 +37,10 @@ impl ShotPut {
             best: 0,
             played: 0,
             thrown: Vec::new(),
+            pending: true,
             log: Vec::new(),
         };
-        g.throw(rng);
+        let _ = rng;
         g
     }
 
@@ -88,7 +91,11 @@ impl ShotPut {
         if self.finished() {
             self.log.push(format!("Best of three: {}", self.best));
         } else {
-            self.throw(rng);
+            // The next attempt's compulsory first die waits for the
+            // player: fouling it is the single most surprising thing this
+            // event does, and it should not happen off-screen.
+            let _ = rng;
+            self.pending = true;
         }
     }
 }
@@ -112,7 +119,15 @@ impl Game for ShotPut {
         }];
 
         let mut choices = Vec::new();
-        if !self.finished() {
+        if !self.finished() && self.pending {
+            choices.push(Choice {
+                action: Action::Roll,
+                label: format!("Start attempt {}", self.played + 1),
+                detail: "Throw the compulsory first die. A 1 voids the \
+                         attempt before it begins."
+                    .to_string(),
+            });
+        } else if !self.finished() {
             choices.push(Choice {
                 action: Action::Stop,
                 label: format!("Stop on {}", self.running()),
@@ -162,6 +177,17 @@ impl Game for ShotPut {
         if self.finished() {
             return false;
         }
+        if let Action::Roll = action {
+            if !self.pending {
+                return false;
+            }
+            self.pending = false;
+            self.throw(rng);
+            return true;
+        }
+        if self.pending {
+            return false;
+        }
         match action {
             Action::Reroll => {
                 self.throw(rng);
@@ -176,7 +202,8 @@ impl Game for ShotPut {
             Action::Freeze
             | Action::Attempt { .. }
             | Action::Skip
-            | Action::Keep { .. } => false,
+            | Action::Keep { .. }
+            | Action::Roll => false,
         }
     }
 }
@@ -195,7 +222,8 @@ mod tests {
                 break;
             }
             assert!(!g.thrown.contains(&1));
-            g.apply(&Action::Reroll, &mut rng);
+            let a = g.view().choices.last().expect("a move").action.clone();
+            g.apply(&a, &mut rng);
         }
     }
 
@@ -208,7 +236,9 @@ mod tests {
             if g.view().result.is_some() {
                 break;
             }
-            g.apply(&Action::Stop, &mut rng);
+            // Roll when one is due, otherwise bank immediately.
+            let a = g.view().choices[0].action.clone();
+            g.apply(&a, &mut rng);
         }
         let v = g.view();
         assert!(v.result.is_some());

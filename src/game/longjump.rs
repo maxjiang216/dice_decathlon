@@ -51,13 +51,15 @@ pub struct LongJump {
     carried: usize,
     /// True between freezing and deciding whether to throw on.
     deciding: bool,
+    /// True when an attempt's opening run-up throw is due.
+    pending: bool,
     log: Vec<String>,
 }
 
 impl LongJump {
     /// Start the event and throw the first run-up.
     pub fn new(rng: &mut Rng) -> Self {
-        let mut g = Self {
+        let g = Self {
             best: 0,
             played: 0,
             phase: Phase::RunUp,
@@ -65,9 +67,10 @@ impl LongJump {
             table: Vec::new(),
             carried: 0,
             deciding: false,
+            pending: true,
             log: Vec::new(),
         };
-        g.start_attempt(rng);
+        let _ = rng;
         g
     }
 
@@ -102,12 +105,14 @@ impl LongJump {
     fn end_attempt(&mut self, rng: &mut Rng, score: i32) {
         self.best = self.best.max(score);
         self.played += 1;
+        self.kept.clear();
+        self.table.clear();
         if self.finished() {
-            self.kept.clear();
-            self.table.clear();
             self.log.push(format!("Best of three: {}", self.best));
         } else {
-            self.start_attempt(rng);
+            // The next run-up waits to be acknowledged.
+            let _ = rng;
+            self.pending = true;
         }
     }
 
@@ -215,7 +220,15 @@ impl Game for LongJump {
         }];
 
         let mut choices = Vec::new();
-        if !self.finished() {
+        if !self.finished() && self.pending {
+            choices.push(Choice {
+                action: Action::Roll,
+                label: format!("Start attempt {}", self.played + 1),
+                detail: "Throw all five dice for the run-up. You must then \
+                         freeze at least one, whatever shows."
+                    .to_string(),
+            });
+        } else if !self.finished() {
             if self.deciding {
                 if self.phase == Phase::RunUp {
                     choices.push(Choice {
@@ -273,6 +286,17 @@ impl Game for LongJump {
 
     fn apply(&mut self, action: &Action, rng: &mut Rng) -> bool {
         if self.finished() {
+            return false;
+        }
+        if let Action::Roll = action {
+            if !self.pending {
+                return false;
+            }
+            self.pending = false;
+            self.start_attempt(rng);
+            return true;
+        }
+        if self.pending {
             return false;
         }
         match action {
@@ -335,7 +359,10 @@ impl Game for LongJump {
                 self.log.push(format!("Rethrew {}", render(&self.table)));
                 true
             }
-            Action::Freeze | Action::Attempt { .. } | Action::Skip => false,
+            Action::Freeze
+            | Action::Attempt { .. }
+            | Action::Skip
+            | Action::Roll => false,
         }
     }
 }
@@ -350,7 +377,8 @@ mod tests {
     fn the_first_freeze_never_steps_over() {
         for seed in 0..40 {
             let mut rng = Rng::new(seed);
-            let g = LongJump::new(&mut rng);
+            let mut g = LongJump::new(&mut rng);
+            g.apply(&Action::Roll, &mut rng);
             let lowest = g.table.iter().copied().min().expect("five dice");
             assert!(i32::from(lowest) <= LIMIT);
         }
@@ -361,6 +389,7 @@ mod tests {
     fn stepping_over_voids_the_attempt() {
         let mut rng = Rng::new(21);
         let mut g = LongJump::new(&mut rng);
+        g.apply(&Action::Roll, &mut rng);
         // Freeze everything at once; five dice total at least 5 and often
         // more than 8, and when they do the attempt must be void.
         let all: Vec<u8> = (0..g.table.len() as u8).collect();

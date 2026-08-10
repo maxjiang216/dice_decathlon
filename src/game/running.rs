@@ -91,26 +91,37 @@ pub struct Running {
     /// Faces showing on the set being played.
     dice: Vec<u8>,
     rerolls_left: u32,
+    /// True when the next set is due to be thrown but has not been.
+    pending: bool,
     log: Vec<String>,
 }
 
 impl Running {
-    /// Start the event, throwing the first set.
-    pub fn new(rules: Rules, rng: &mut Rng) -> Self {
-        let dice = rng.roll_n(rules.per_set);
-        let log = vec![format!(
-            "{} 1 thrown: {} ({} points)",
-            rules.group_word,
-            render(&dice),
-            score_set(&dice, rules.six_penalty)
-        )];
+    /// Set the event up. The first throw waits for the player.
+    pub fn new(rules: Rules, _rng: &mut Rng) -> Self {
         Self {
             rules,
             frozen: Vec::new(),
-            dice,
+            dice: Vec::new(),
             rerolls_left: rules.rerolls,
-            log,
+            // Nothing is on the table until the player throws, so the
+            // opening of every set is something they see happen.
+            pending: true,
+            log: Vec::new(),
         }
+    }
+
+    /// Throw the set now due.
+    fn throw_set(&mut self, rng: &mut Rng) {
+        self.dice = rng.roll_n(self.rules.per_set);
+        self.pending = false;
+        self.log.push(format!(
+            "{} {} thrown: {} ({} points)",
+            self.rules.group_word,
+            self.set_idx() + 1,
+            render(&self.dice),
+            self.showing(),
+        ));
     }
 
     /// Index of the set being played.
@@ -191,7 +202,19 @@ impl Game for Running {
             .collect();
 
         let mut choices = Vec::new();
-        if !self.finished() {
+        if !self.finished() && self.pending {
+            choices.push(Choice {
+                action: Action::Roll,
+                label: format!(
+                    "Throw {} {}",
+                    r.group_word.to_lowercase(),
+                    active + 1
+                ),
+                detail: "The rules oblige this throw; there is nothing to \
+                         decide until you see it."
+                    .to_string(),
+            });
+        } else if !self.finished() {
             let current = self.showing();
             let noun = if r.per_set == 1 {
                 "die".to_string()
@@ -259,8 +282,15 @@ impl Game for Running {
         }
         let r = self.rules;
         match action {
+            Action::Roll => {
+                if !self.pending {
+                    return false;
+                }
+                self.throw_set(rng);
+                true
+            }
             Action::Reroll => {
-                if self.rerolls_left == 0 {
+                if self.rerolls_left == 0 || self.pending {
                     return false;
                 }
                 self.rerolls_left -= 1;
@@ -281,6 +311,9 @@ impl Game for Running {
             | Action::Keep { .. }
             | Action::Stop => false,
             Action::Freeze => {
+                if self.pending {
+                    return false;
+                }
                 let score = self.showing();
                 self.log.push(format!(
                     "{} {} frozen: {} ({score:+})",
@@ -289,18 +322,11 @@ impl Game for Running {
                     render(&self.dice),
                 ));
                 self.frozen.push(score);
+                self.dice.clear();
                 if self.finished() {
-                    self.dice.clear();
                     self.log.push(format!("Final score: {}", self.locked()));
                 } else {
-                    self.dice = rng.roll_n(r.per_set);
-                    self.log.push(format!(
-                        "{} {} thrown: {} ({} points)",
-                        r.group_word,
-                        self.set_idx() + 1,
-                        render(&self.dice),
-                        self.showing(),
-                    ));
+                    self.pending = true;
                 }
                 true
             }
@@ -342,6 +368,7 @@ mod tests {
         let mut rng = Rng::new(3);
         let r = rules("100m").expect("100m exists");
         let mut g = Running::new(r, &mut rng);
+        assert!(g.apply(&Action::Roll, &mut rng), "opening throw");
         for _ in 0..5 {
             assert!(g.apply(&Action::Reroll, &mut rng));
         }
@@ -349,6 +376,7 @@ mod tests {
         assert_eq!(g.view().rerolls_left, 0);
         assert!(!g.apply(&Action::Reroll, &mut rng));
         assert!(g.apply(&Action::Freeze, &mut rng));
+        assert!(g.apply(&Action::Roll, &mut rng), "next set's throw");
         assert!(!g.apply(&Action::Reroll, &mut rng));
         assert!(g.view().choices.iter().all(|c| c.action != Action::Reroll));
     }
@@ -361,6 +389,7 @@ mod tests {
         let mut g = Running::new(r, &mut rng);
         let mut want = 0;
         for i in 0..r.sets {
+            assert!(g.apply(&Action::Roll, &mut rng), "throw set {i}");
             assert!(g.view().groups[i].active, "set {i} should be active");
             want += g.showing();
             assert!(g.apply(&Action::Freeze, &mut rng));
@@ -376,6 +405,7 @@ mod tests {
             let r = rules("1500m").expect("1500m exists");
             let mut g = Running::new(r, &mut rng);
             for _ in 0..r.sets {
+                g.apply(&Action::Roll, &mut rng);
                 g.apply(&Action::Freeze, &mut rng);
             }
             g.view().result
@@ -390,6 +420,7 @@ mod tests {
         for r in RUNNING {
             let mut g = Running::new(r, &mut rng);
             for _ in 0..r.sets {
+                assert!(g.apply(&Action::Roll, &mut rng), "{}", r.key);
                 assert!(g.apply(&Action::Freeze, &mut rng), "{}", r.key);
             }
             let v = g.view();

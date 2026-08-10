@@ -73,13 +73,15 @@ pub struct Freeze {
     fouled: bool,
     /// True between freezing and deciding whether to throw on.
     deciding: bool,
+    /// True when an attempt's opening throw is due but not yet made.
+    pending: bool,
     log: Vec<String>,
 }
 
 impl Freeze {
     /// Start the event and throw the first attempt's opening dice.
     pub fn new(rules: Rules, rng: &mut Rng) -> Self {
-        let mut g = Self {
+        let g = Self {
             rules,
             best: 0,
             played: 0,
@@ -87,9 +89,10 @@ impl Freeze {
             table: Vec::new(),
             fouled: false,
             deciding: false,
+            pending: true,
             log: Vec::new(),
         };
-        g.throw(rng);
+        let _ = rng;
         g
     }
 
@@ -186,7 +189,9 @@ impl Freeze {
         if self.finished() {
             self.log.push(format!("Best of three: {}", self.best));
         } else {
-            self.throw(rng);
+            // The next attempt's opening throw waits to be acknowledged.
+            let _ = rng;
+            self.pending = true;
         }
     }
 }
@@ -232,7 +237,15 @@ impl Game for Freeze {
         }];
 
         let mut choices = Vec::new();
-        if !self.finished() {
+        if !self.finished() && self.pending {
+            choices.push(Choice {
+                action: Action::Roll,
+                label: format!("Throw attempt {}", self.played + 1),
+                detail: "Throw every die to open the attempt. Nothing to \
+                         decide until you see it."
+                    .to_string(),
+            });
+        } else if !self.finished() {
             if self.deciding {
                 choices.push(Choice {
                     action: Action::Stop,
@@ -286,6 +299,17 @@ impl Game for Freeze {
         if self.finished() || self.fouled {
             return false;
         }
+        if let Action::Roll = action {
+            if !self.pending {
+                return false;
+            }
+            self.pending = false;
+            self.throw(rng);
+            return true;
+        }
+        if self.pending {
+            return false;
+        }
         match action {
             Action::Keep { dice } => {
                 if self.deciding || dice.is_empty() {
@@ -336,7 +360,10 @@ impl Game for Freeze {
                 self.throw(rng);
                 true
             }
-            Action::Freeze | Action::Attempt { .. } | Action::Skip => false,
+            Action::Freeze
+            | Action::Attempt { .. }
+            | Action::Skip
+            | Action::Roll => false,
         }
     }
 }
