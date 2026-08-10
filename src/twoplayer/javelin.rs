@@ -45,9 +45,12 @@ pub fn solve_first_mover(
         .map(|d| {
             // value[a * BESTS + b] with `a`, `b` the two banked bests.
             // Seeded with the event over, so the bests settle into `d`.
+            let live: Vec<usize> = (0..BESTS)
+                .filter(|&s| attempt.reachable_scores[s])
+                .collect();
             let mut value = vec![0.0f64; BESTS * BESTS];
-            for a in 0..BESTS {
-                for b in 0..BESTS {
+            for &a in &live {
+                for &b in &live {
                     value[a * BESTS + b] = after(d + a as i32 - b as i32);
                 }
             }
@@ -58,8 +61,8 @@ pub fn solve_first_mover(
                 let first_to_move = phase % 2 == 0;
                 let mut next = vec![0.0f64; BESTS * BESTS];
                 let mut payoff = vec![0.0f64; BESTS];
-                for a in 0..BESTS {
-                    for b in 0..BESTS {
+                for &a in &live {
+                    for &b in &live {
                         // Scoring `s` replaces the mover's best with
                         // max(best, s) — a foul scores 0 and so leaves
                         // it alone.
@@ -70,7 +73,8 @@ pub fn solve_first_mover(
                                 value[a * BESTS + b.max(s)]
                             };
                         }
-                        next[a * BESTS + b] = attempt.expected(&payoff);
+                        let floor = if first_to_move { a } else { b };
+                        next[a * BESTS + b] = attempt.expected(&payoff, floor);
                     }
                 }
                 value = next;
@@ -92,7 +96,35 @@ pub fn measure(
     let attempt = Attempt::new(6, [1, 3, 5]);
     let nodes = attempt.nodes;
     let phases = 2 * ATTEMPTS;
-    let control = phases * BESTS * BESTS * nodes;
+    // Indexed densely so `a` and `b` stay plain scores, but only the
+    // reachable bests are ever written -- that smaller figure is what a
+    // stored policy would actually occupy.
+    let slots = phases * BESTS * BESTS * nodes;
+    // A node dead against the mover's banked best needs no stored action,
+    // and deadness depends only on that best -- not on the difference --
+    // so it can be counted once.
+    let per_floor: Vec<usize> =
+        (0..BESTS).map(|floor| attempt.live_nodes(floor)).collect();
+    // Only `(phase, a, b)` triples play actually reaches. Before the
+    // first mover has thrown, both bests are still zero; before the
+    // second has, only the first mover's can be anything else.
+    let mut control = 0usize;
+    for phase in 0..phases {
+        let a_thrown = phase.div_ceil(2) > 0;
+        let b_thrown = phase / 2 > 0;
+        for a in (0..BESTS).filter(|&s| attempt.reachable_scores[s]) {
+            if !a_thrown && a != 0 {
+                continue;
+            }
+            for b in (0..BESTS).filter(|&s| attempt.reachable_scores[s]) {
+                if !b_thrown && b != 0 {
+                    continue;
+                }
+                let mover_best = if phase % 2 == 0 { a } else { b };
+                control += per_floor[mover_best];
+            }
+        }
+    }
 
     // EV baseline: the solo best-of-three policy, which depends only on
     // attempts left and the player's own banked best -- never on `d`.
@@ -109,21 +141,27 @@ pub fn measure(
                 *slot = solo[a.max(s)];
             }
             let base = (k * BESTS + a) * nodes;
-            next[a] = attempt
-                .expected_with_policy(&payoff, &mut ev[base..base + nodes]);
+            next[a] = attempt.expected_with_policy(
+                &payoff,
+                a,
+                &mut ev[base..base + nodes],
+            );
         }
         solo = next;
     }
 
-    let mut runs = super::compress::RunCounter::new(control);
-    let mut chosen = vec![0u8; control];
-    let mut deviates = vec![false; control];
+    let mut runs = super::compress::RunCounter::new(slots);
+    let mut chosen = vec![0u8; slots];
+    let mut deviates = vec![false; slots];
     let mut baseline = vec![0u8; nodes];
 
+    let live: Vec<usize> = (0..BESTS)
+        .filter(|&s| attempt.reachable_scores[s])
+        .collect();
     for d in axis.iter() {
         let mut value = vec![0.0f64; BESTS * BESTS];
-        for a in 0..BESTS {
-            for b in 0..BESTS {
+        for &a in &live {
+            for &b in &live {
                 value[a * BESTS + b] = after(d + a as i32 - b as i32);
             }
         }
@@ -134,8 +172,8 @@ pub fn measure(
             let left = ATTEMPTS - 1 - phase / 2;
             let mut next = vec![0.0f64; BESTS * BESTS];
             let mut payoff = vec![0.0f64; BESTS];
-            for a in 0..BESTS {
-                for b in 0..BESTS {
+            for &a in &live {
+                for &b in &live {
                     for (s, slot) in payoff.iter_mut().enumerate() {
                         *slot = if first_to_move {
                             value[a.max(s) * BESTS + b]
@@ -149,6 +187,7 @@ pub fn measure(
                     let dst = ((phase * BESTS + a) * BESTS + b) * nodes;
                     next[a * BESTS + b] = attempt.expected_vs_baseline(
                         &payoff,
+                        own,
                         &baseline,
                         &mut chosen[dst..dst + nodes],
                         &mut deviates[dst..dst + nodes],
@@ -197,7 +236,7 @@ mod tests {
                 for (s, slot) in payoff.iter_mut().enumerate() {
                     *slot = value[a.max(s) * BESTS];
                 }
-                next[a * BESTS] = attempt.expected(&payoff);
+                next[a * BESTS] = attempt.expected(&payoff, a);
             }
             value = next;
         }

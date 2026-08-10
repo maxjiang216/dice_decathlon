@@ -47,6 +47,15 @@ pub struct Attempt {
     node_base: Vec<usize>,
     /// Total decision nodes; 701 for the javelin, 367 for the discus.
     pub nodes: usize,
+    /// Largest freezable face: 5 for the javelin, 6 for the discus. Six
+    /// javelin dice therefore cap at 30, exactly like five discus dice.
+    max_face: i32,
+    /// Which scores an attempt can actually produce. The javelin cannot
+    /// score 27 or 29 — odd totals need an odd number of dice, and five
+    /// is the most that fit — and the discus can only score evens. A
+    /// banked best is always one of these, so the rest need never be
+    /// visited.
+    pub reachable_scores: Vec<bool>,
     dice: u32,
 }
 
@@ -106,14 +115,66 @@ impl Attempt {
             node_base.push(nodes);
             nodes += reachable[u].len() * throws[u].len();
         }
+        let width = (MAX_SCORE + 1) as usize;
+        let mut reachable_scores = vec![false; width];
+        reachable_scores[0] = true; // a foul scores nothing
+        for k in 1..=dice as i32 {
+            for lo in 0..=k {
+                for mid in 0..=k - lo {
+                    let hi = k - lo - mid;
+                    let s = lo * faces[0] + mid * faces[1] + hi * faces[2];
+                    if s <= MAX_SCORE {
+                        reachable_scores[s as usize] = true;
+                    }
+                }
+            }
+        }
         Self {
             throws,
             totals,
             reachable,
             node_base,
             nodes,
+            max_face: faces[2],
+            reachable_scores,
             dice,
         }
+    }
+
+    /// Decision nodes worth storing when the mover has banked `floor`.
+    ///
+    /// A node is dropped when it is dead (nothing can beat `floor`), when
+    /// the throw shows no freezable die at all (an invalid attempt, with
+    /// nothing to decide), or when its single freeze uses up the last die
+    /// in hand so there is not even a stop-or-continue choice left.
+    pub fn live_nodes(&self, floor: usize) -> usize {
+        let mut n = 0;
+        for u in 1..=self.dice as usize {
+            for &fs in &self.reachable[u] {
+                if self.is_dead(u, fs, floor) {
+                    continue;
+                }
+                for throw in &self.throws[u] {
+                    let forced = throw.choices.is_empty()
+                        || (throw.choices.len() == 1
+                            && throw.choices[0].0 as usize == u);
+                    if !forced {
+                        n += 1;
+                    }
+                }
+            }
+        }
+        n
+    }
+
+    /// Whether an attempt holding `fs` with `u` dice left can still beat
+    /// `floor`, the mover's banked best.
+    ///
+    /// If it cannot, every outcome leaves the best untouched, so the
+    /// whole subtree collapses to a single value and never needs
+    /// exploring. About one node in seven is dead this way.
+    const fn is_dead(&self, u: usize, fs: usize, floor: usize) -> bool {
+        fs + u * self.max_face as usize <= floor
     }
 
     /// As [`Attempt::expected`], but also records which choice was taken
@@ -127,14 +188,24 @@ impl Attempt {
     pub fn expected_with_policy(
         &self,
         payoff: &[f64],
+        floor: usize,
         policy: &mut [u8],
     ) -> f64 {
         let width = (MAX_SCORE + 1) as usize;
         let mut best = vec![0.0f64; (self.dice as usize + 1) * width];
         for u in 1..=self.dice as usize {
             for (fi, &fs) in self.reachable[u].iter().enumerate() {
-                let mut acc = 0.0;
                 let row = self.node_base[u] + fi * self.throws[u].len();
+                if self.is_dead(u, fs, floor) {
+                    // Nothing here can beat the banked best, so the whole
+                    // subtree is one value and no action is ever needed.
+                    best[u * width + fs] = payoff[0];
+                    for t in 0..self.throws[u].len() {
+                        policy[row + t] = u8::MAX;
+                    }
+                    continue;
+                }
+                let mut acc = 0.0;
                 for (ti, throw) in self.throws[u].iter().enumerate() {
                     let v = if throw.choices.is_empty() {
                         policy[row + ti] = u8::MAX;
@@ -180,7 +251,7 @@ impl Attempt {
     /// `payoff[0]`. A slice rather than a closure because this is the
     /// innermost loop of the whole solver and the dynamic dispatch
     /// showed up.
-    pub fn expected(&self, payoff: &[f64]) -> f64 {
+    pub fn expected(&self, payoff: &[f64], floor: usize) -> f64 {
         let width = (MAX_SCORE + 1) as usize;
         // best[u][fs] = value with `u` dice in hand and `fs` frozen,
         // before throwing. Filled for increasing `u` because freezing
@@ -188,6 +259,10 @@ impl Attempt {
         let mut best = vec![0.0f64; (self.dice as usize + 1) * width];
         for u in 1..=self.dice as usize {
             for &fs in &self.reachable[u] {
+                if self.is_dead(u, fs, floor) {
+                    best[u * width + fs] = payoff[0];
+                    continue;
+                }
                 let mut acc = 0.0;
                 for throw in &self.throws[u] {
                     let v = if throw.choices.is_empty() {
@@ -228,6 +303,7 @@ impl Attempt {
     pub fn expected_vs_baseline(
         &self,
         payoff: &[f64],
+        floor: usize,
         baseline: &[u8],
         chosen: &mut [u8],
         deviates: &mut [bool],
@@ -236,8 +312,18 @@ impl Attempt {
         let mut best = vec![0.0f64; (self.dice as usize + 1) * width];
         for u in 1..=self.dice as usize {
             for (fi, &fs) in self.reachable[u].iter().enumerate() {
-                let mut acc = 0.0;
                 let row = self.node_base[u] + fi * self.throws[u].len();
+                if self.is_dead(u, fs, floor) {
+                    // Nothing here can beat the banked best, so the whole
+                    // subtree is one value and no action is ever needed.
+                    best[u * width + fs] = payoff[0];
+                    for t in 0..self.throws[u].len() {
+                        chosen[row + t] = u8::MAX;
+                        deviates[row + t] = false;
+                    }
+                    continue;
+                }
+                let mut acc = 0.0;
                 for (ti, throw) in self.throws[u].iter().enumerate() {
                     let node = row + ti;
                     let v = if throw.choices.is_empty() {
@@ -331,12 +417,12 @@ mod tests {
     #[test]
     fn single_attempt_matches_the_solo_engine() {
         let identity: Vec<f64> = (0..=MAX_SCORE).map(f64::from).collect();
-        let jav = Attempt::new(6, [1, 3, 5]).expected(&identity);
+        let jav = Attempt::new(6, [1, 3, 5]).expected(&identity, 0);
         assert!(
             (jav - 15.218_094_840).abs() < 1e-9,
             "javelin single attempt = {jav}"
         );
-        let dis = Attempt::new(5, [2, 4, 6]).expected(&identity);
+        let dis = Attempt::new(5, [2, 4, 6]).expected(&identity, 0);
         assert!(
             (dis - 14.885_438_946).abs() < 1e-9,
             "discus single attempt = {dis}"
