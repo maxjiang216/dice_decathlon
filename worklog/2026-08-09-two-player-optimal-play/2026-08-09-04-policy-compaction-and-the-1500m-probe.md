@@ -149,8 +149,27 @@ is, storage is O(control states):
 The ~14 MB is 1.7 MB of `d`-independent EV baseline (which `src/disciplines/` already
 computes) plus ~12.6 MB of intervals at roughly 55% of control states × 5 bytes.
 
-1500m alone only shows 3.4× against bit-packing because its axis is short at 177; the ratio
-grows with axis length and most events are wider.
+For 1500m concretely, the whole two-player policy is **612 bytes**:
+
+```
+288 control states x 2 B   (i8 lo, i8 hi; lo > hi means "never deviates")   576 B
++ EV baseline, 288 bits                                                      36 B
+```
+
+against 6,372 B bit-packed and 50,976 B raw — **10.4x and 83x**. The margin fits in an
+`i8` (−88..88) and for a binary action the deviating choice is implied, so no action byte
+is needed. Only the 160 *deviating* control states cost anything; the other 128 are free
+by definition.
+
+(An earlier draft of this entry said 3.4x. That was a poor encoding, not a limit — it
+stored all 608 runs at 3 bytes each, including the runs that agree with EV and therefore
+need no bytes at all.)
+
+The mechanism is that you stop paying per-`d` and start paying per-control-state:
+`packed = ctrl x axis x bits/8` grows with the axis, `interval = ctrl x ~2 B` is flat in
+it. So the ratio *improves* on events with wider axes — 400m's is 549, high jump's 393 —
+and 1500m at 177 is near the least favourable case. At 612 bytes the 1500m policy is small
+enough to embed in the wasm bundle as a literal.
 
 **Recompute-per-event remains the best option for the web UI**, since a slice is ~11 MB at
 f32 or 22 MB at f64 and solves in milliseconds. The 14 MB matters only if a precomputed
