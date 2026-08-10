@@ -512,6 +512,36 @@ mod tests {
         assert!((ev - 22.394_956_800).abs() < 1e-9, "long jump EV = {ev}");
     }
 
+    /// Every class enumeration must reconstruct exactly the ordered
+    /// rolls it stands for, or the probabilities are wrong everywhere
+    /// downstream and no structural test would notice.
+    #[test]
+    fn class_weights_reconstruct_every_ordered_roll() {
+        // Plain multisets: weights are multinomial coefficients.
+        for n in 1..=DICE {
+            let total: u64 = multisets(n).iter().map(|(_, w)| w).sum();
+            assert_eq!(total, 6u64.pow(n as u32), "multisets of {n}");
+        }
+        let lj = LongJump::new();
+        // Jump throws are multisets of the dice still in hand.
+        for r in 1..=DICE {
+            let total: u64 = lj.jump_throws[r].iter().map(|t| t.weight).sum();
+            assert_eq!(total, 6u64.pow(r as u32), "jump throws of {r}");
+        }
+        // Run-up throws group multisets by feasible prefix, so grouping
+        // must preserve the total.
+        for (si, &(nf, _)) in lj.runup.iter().enumerate() {
+            let u = DICE - nf;
+            let total: u64 = lj.run_throws[si].iter().map(|t| t.weight).sum();
+            assert_eq!(
+                total,
+                6u64.pow(u as u32),
+                "run-up at {:?}",
+                lj.runup[si]
+            );
+        }
+    }
+
     /// The first throw cannot bust: the smallest of five dice is at most
     /// 6, well under the limit of 8.
     #[test]

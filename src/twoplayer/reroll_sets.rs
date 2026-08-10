@@ -292,3 +292,37 @@ impl RerollSets {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A set's score distribution must account for every ordered roll of
+    /// its dice, or the reroll decision is weighted wrongly.
+    #[test]
+    fn set_scores_reconstruct_every_ordered_roll() {
+        for per_set in 1..=5u32 {
+            for penalty in [true, false] {
+                let (scores, total) =
+                    RerollSets::set_score_distribution(per_set, penalty);
+                assert_eq!(total, 6u64.pow(per_set), "{per_set} dice");
+                let summed: u64 = scores.iter().map(|(_, w)| w).sum();
+                assert_eq!(summed, total, "{per_set} dice, penalty {penalty}");
+            }
+        }
+    }
+
+    /// Collapsing a roll to its score is only sound if the weights carry
+    /// the multiplicity. A 4-dice set has 1296 ordered rolls across 37
+    /// distinct scores, so most classes stand for many rolls.
+    #[test]
+    fn classes_stand_for_many_rolls_each() {
+        let (scores, total) = RerollSets::set_score_distribution(4, true);
+        assert_eq!(scores.len(), 37);
+        assert_eq!(total, 1296);
+        assert!(scores.iter().any(|(_, w)| *w > 1), "weights must vary");
+        // The extremes are unique: four sixes, and four fives.
+        assert_eq!(scores.first().map(|(s, w)| (*s, *w)), Some((-24, 1)));
+        assert_eq!(scores.last().map(|(s, w)| (*s, *w)), Some((20, 1)));
+    }
+}
