@@ -10,8 +10,8 @@
 //! JavaScript means there is one implementation of the rulebook to audit,
 //! not two that can drift apart. The page is a renderer.
 
-pub mod m100;
 pub mod rng;
+pub mod running;
 
 use serde::{Deserialize, Serialize};
 
@@ -96,14 +96,12 @@ pub trait Game {
 /// interactive engine exists for it yet.
 #[must_use]
 pub fn start(key: &str, rng: &mut rng::Rng) -> Option<Box<dyn Game>> {
-    match key {
-        "100m" => Some(Box::new(m100::Sprint100m::new(rng))),
-        _ => None,
-    }
+    running::rules(key)
+        .map(|r| Box::new(running::Running::new(r, rng)) as Box<dyn Game>)
 }
 
 /// Keys of the disciplines that can currently be played interactively.
 #[must_use]
 pub fn playable() -> Vec<&'static str> {
-    vec!["100m"]
+    running::RUNNING.iter().map(|r| r.key).collect()
 }
