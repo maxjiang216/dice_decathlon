@@ -12,8 +12,10 @@
 
 pub mod freeze;
 pub mod ladder;
+pub mod longjump;
 pub mod rng;
 pub mod running;
+pub mod shotput;
 
 use serde::{Deserialize, Serialize};
 
@@ -135,5 +137,6 @@ pub fn playable() -> Vec<&'static str> {
         .map(|r| r.key)
         .chain(ladder::LADDERS.iter().map(|r| r.key))
         .chain(freeze::FREEZE.iter().map(|r| r.key))
+        .chain(["shotput", "longjump"])
         .collect()
 }
