@@ -40,14 +40,30 @@ Status key: `[ ]` open · `[x]` closed, with what closed it.
   the moment anything makes the three jumps non-identical (a variant that carries dice
   over, or a rule about ones accumulating).
 
-- [ ] **Skipping a height is modelled but is never chosen.** `p_clear` is monotone
-  decreasing in the height, so attempting `h` weakly dominates skipping to `h+2`; the
-  skip branch is dead code under the solo-EV objective. It is kept because the rulebook
-  example explicitly skips heights, and because a championship objective (medals, not
-  points) could make skipping live. *Watch for:* anyone "simplifying" the skip branch
-  away before the multiplayer objective lands.
+- [ ] **Skipping a height is modelled but is never chosen — under solo EV only.**
+  `p_clear` is monotone decreasing in the height, so attempting `h` weakly dominates
+  skipping to `h+2`; the skip branch is dead code for the current objective. It is kept
+  because the rulebook example explicitly skips heights. *Watch for:* anyone
+  "simplifying" the skip branch away — **it is provably live under a win-probability
+  objective**, see `worklog/2026-08-09-two-player-optimal-play/`. Skipping is free (you
+  keep your best, stay alive, lose nothing) while attempting risks elimination on three
+  misses, and clearing a bar you do not need is worth nothing when only the final
+  ranking counts. So a trailing player skips low bars to protect a shot at the one that
+  actually wins. Sharpest in pole vault, where even the opening bar of 10 carries a
+  13.6% elimination chance, against high jump's ~0.0004%.
 
 ## Inferences the rulebook does not settle
+
+- [ ] **You cannot bail out part-way through a height.** High jump and pole vault both say
+  you decide to attempt or skip, and then *"you have three jumps in which to master it"*,
+  with *"if you suffer three invalid jumps at one height you have to stop"*. We read the
+  go/skip decision as made once per height, with the three jumps then being your allotment
+  — so two misses commit you to the third. Nothing in the rulebook explicitly forbids
+  stopping after one or two failures and moving to the next bar. Harmless under solo EV,
+  where the option is worthless. *Watch for:* it is **not** harmless under a
+  win-probability objective, where bailing after two misses would dodge elimination and
+  preserve a shot at a higher bar — exactly the manoeuvre a trailing player wants. A
+  different reading changes optimal play here.
 
 - [ ] **Shot put forces the first die.** "Throw one die after the other. At any point you
   can stop" does not say whether you may stop before throwing anything. We require at
