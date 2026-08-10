@@ -1,239 +1,145 @@
-# Knizia Decathlon Optimal Policy Precomputation
+# Knizia Decathlon
 
-This repository contains tools to compute and analyze **optimal strategies** for the events in *Reiner Knizia's Decathlon* dice game.  
-It currently includes:
+Optimal strategies for the ten events of **Reiner Knizia's Decathlon**, a 1990 dice
+game played with eight dice and a score sheet. The [rules are two pages][pdf] and are
+the specification this repository is checked against.
 
-- **100m Sprint** — complete solver, database, analysis scripts, and interactive player.
-- **Long Jump** — solver and analysis in progress, policy precomputation implemented.
+Two things live here:
 
-The goal is to extend this framework to all ten Decathlon events.
+- **Solvers** — an exact dynamic program per event, giving the full distribution of the
+  final score under optimal play. All ten events are covered.
+- **A web UI** — play an event yourself in the browser, against the same rules engine.
+  100 Metres so far.
 
-> **New: all-Rust solvers.** A self-contained Rust crate now computes the
-> optimal expected-value policy for **all ten events** via exact dynamic
-> programming, replacing the per-event C++/Python pipeline. The original
-> C++/Python files are kept for reference. See
-> [Rust implementation](#-rust-implementation) below.
+[pdf]: https://www.knizia.de/wp-content/uploads/reiner/freebies/Website-Decathlon.pdf
 
 ---
 
-## 🦀 Rust implementation
+## Optimal expected values
 
-The `decathlon` Rust binary solves every event as a single-player game whose
-objective is to maximise the expected value of that event's own score
-(multiplayer turn order and championship medals are out of scope). Each
-solver returns the **exact distribution** of the final score under optimal
-play; expected value, standard deviation, PMF and CDF are derived from it.
+Each event is solved as a single-player game maximising the expected value of that
+event's own score. Every number below has been **independently reproduced to nine
+decimal places** by a separate brute force written from the rulebook alone, and is
+pinned in `tests/disciplines.rs`.
 
-Three shared engines cover the ten events:
+| Event | Key | EV | SD | Range |
+|-------|-----|---:|---:|---|
+| 100 Metres | `100m` | 23.998 | 6.19 | −48 … 40 |
+| Long Jump | `longjump` | 22.395 | 3.97 | 0 … 30 |
+| Shot Put | `shotput` | 18.634 | 12.03 | 0 … 48 |
+| High Jump | `highjump` | 19.263 | 2.27 | 0 … 30 |
+| 400 Metres | `400m` | 25.668 | 5.46 | −48 … 40 |
+| 110m Hurdles | `110mh` | 21.375 | 2.96 | 5 … 30 |
+| Discus | `discus` | 22.317 | 4.54 | 0 … 30 |
+| Pole Vault | `polevault` | 17.278 | 11.14 | 0 … 48 |
+| Javelin | `javelin` | 22.252 | 4.30 | 0 … 30 |
+| 1500 Metres | `1500m` | 26.529 | 5.25 | −48 … 40 |
 
-- **Reroll-set** (`src/disciplines/reroll_sets.rs`) — 100m, 400m, 1500m, Hurdles.
-- **Best-of-N attempts** (`src/disciplines/best_of_n.rs`) — Shot Put, Long Jump,
-  Discus, Javelin. Within-attempt play is conditioned on the best score banked
-  so far via a value function `v(k, b)`.
-- **Rising bar** (`src/disciplines/heights.rs`) — High Jump, Pole Vault.
+Multiplayer turn order and the Championship (medals) variant are out of scope — see
+`worklog/RULES-CHECKLIST.md` for why the latter is a genuinely different objective and
+not just a rescaling.
 
-Dice outcomes are enumerated as face-count patterns weighted by their
-**multinomial multiplicity** (`src/dice.rs`), so expected values use correct
-probabilities. (Note: the old C++ 100m solver averaged distinct sorted
-patterns uniformly, which slightly misweights the EV; the Rust version fixes
-this.)
+---
 
-### Usage
+## Play it
 
 ```bash
-cargo run --release -- list                 # list discipline keys
+bash scripts/serve_web.sh          # builds the wasm bundle, serves on :8000
+```
+
+Then open <http://localhost:8000>. Requires [`wasm-pack`][wp].
+
+The rules engine is Rust compiled to WebAssembly (`src/game/`), not a JavaScript
+reimplementation. That is deliberate: a second copy of the rulebook is a second thing
+to keep honest, and this repository has already been bitten once by a paraphrase
+drifting away from the rules it summarised. The page renders; it decides nothing.
+
+[wp]: https://rustwasm.github.io/wasm-pack/installer/
+
+---
+
+## Solve it
+
+```bash
+cargo run --release -- list                 # list event keys
 cargo run --release -- solve 100m           # EV/SD for one event
 cargo run --release -- analyze              # solve all, write output/<key>/
 cargo run --release -- analyze longjump --out output
 cargo test                                  # unit + integration tests
 ```
 
-`analyze` writes, per event, `pmf.csv`, `cdf.txt`, `summary.json`, and SVG
-charts (`pmf.svg`, `cdf.svg`) under `output/<key>/`.
+`analyze` writes `pmf.csv`, `cdf.txt`, `summary.json` and SVG charts per event under
+`output/<key>/`.
 
-### Optimal expected values (own score)
+---
 
-| Event | Key | EV | SD |
-|-------|-----|---:|---:|
-| 100 Metres | `100m` | 24.00 | 6.19 |
-| Long Jump | `longjump` | 22.40 | 3.97 |
-| Shot Put | `shotput` | 18.63 | 12.03 |
-| High Jump | `highjump` | 19.26 | 2.27 |
-| 400 Metres | `400m` | 25.67 | 5.46 |
-| 110m Hurdles | `110mh` | 21.38 | 2.96 |
-| Discus | `discus` | 22.32 | 4.54 |
-| Pole Vault | `polevault` | 17.28 | 11.14 |
-| Javelin | `javelin` | 22.25 | 4.30 |
-| 1500 Metres | `1500m` | 26.53 | 5.25 |
+## How the solvers work
 
-### Linting
+Dice outcomes are enumerated as face-count vectors weighted by their **multinomial
+multiplicity** (`src/dice.rs`), so expectations use correct probabilities. Three shared
+engines cover the ten events:
 
-Code standards are enforced with
-[standard-linter](https://github.com/maxjiang216/standard-linter)
-(rustfmt + clippy). Run locally with:
+- **Reroll sets** (`disciplines/reroll_sets.rs`) — 100m, 400m, 1500m, 110m Hurdles.
+  Dice are split into groups; each group is thrown once for free and may be rethrown
+  from a shared pool of five. Freezing a group locks its score.
+- **Best of N attempts** (`disciplines/best_of_n.rs`) — Shot Put, Long Jump, Discus,
+  Javelin. Play *within* an attempt is conditioned on the best score banked so far via
+  a value function `v(k, b)`: with a strong score in hand you gamble, otherwise you
+  play safe.
+- **Rising bar** (`disciplines/heights.rs`) — High Jump, Pole Vault. The bar starts at
+  10 and rises by 2; three failures at a height end the event.
 
-```bash
-bash scripts/lint.sh --fix --lang rust   # auto-format
-bash scripts/lint.sh --lang rust         # check
+Each returns an exact `Dist` over integer scores, from which EV, SD, PMF and CDF follow.
+
+### Event rules, in brief
+
+Summaries drift — [read the rules][pdf] before changing a solver.
+
+| Event | Dice | Shape | Scoring |
+|---|---|---|---|
+| 100 Metres | 8 | two sets of 4, +5 shared rethrows; a rethrow picks up **all four** | 1–5 add, **6 subtracts 6** |
+| Long Jump | 5 | 3 attempts; run-up (freeze low, foul above 8) then jump | sum of the jump dice |
+| Shot Put | 8 | 3 attempts; throw dice one at a time, stop any time, a **1 fouls** | sum of thrown dice |
+| High Jump | 5 | 3 jumps per height; clear if all five total ≥ the bar | highest height cleared |
+| 400 Metres | 8 | four sets of 2, +5 shared rethrows | 1–5 add, **6 subtracts 6** |
+| 110m Hurdles | 5 | one set of 5, up to 5 rethrows of all five | plain sum, **no six penalty** |
+| Discus | 5 | 3 attempts; freeze **even** faces only, ≥1 per throw | sum of frozen dice |
+| Pole Vault | 8 | 3 jumps per height; choose the die count, any **1 fails** | highest height cleared |
+| Javelin | 6 | 3 attempts; freeze **odd** faces only, ≥1 per throw | sum of frozen dice |
+| 1500 Metres | 8 | eight sets of 1, +5 shared rethrows | sum, **6 subtracts 6** |
+
+---
+
+## Layout
+
+```
+src/
+  dice.rs             dice enumeration with multinomial weights
+  dp.rs               Dist (exact PMF over integer scores) + the optimal-action rule
+  disciplines/        the ten solvers and their three shared engines
+  game/               interactive rules engines for playing by hand
+  analysis/           PMF/CDF/SVG output
+  wasm.rs             browser bindings (feature `wasm`)
+web/
+  index.html          the UI; renders only
+  pkg/                wasm-pack output (generated)
+worklog/              why things are the way they are; start with README.md
+tests/                integration tests, including independently derived values
+solvers/, players/, analysis/
+                      legacy C++/Python pipeline for 100m and Long Jump, superseded
+                      by the Rust crate. The C++ 100m solver averages 126 sorted dice
+                      patterns uniformly instead of by multiplicity, overstating the
+                      event by ~1.45 points; do not read numbers off it.
 ```
 
 ---
 
-## 🎯 Overview
+## Contributing
 
-The workflow for each event:
+Run `bash scripts/lint.sh --fix` then `bash scripts/lint.sh` before committing
+(rustfmt + clippy, via [standard-linter][sl]).
 
-1. **Precompute** the optimal policy for every possible game state via exhaustive search / dynamic programming in **C++**.
-2. **Store** the optimal decisions, expected values, and standard deviations in a compact **SQLite** database.
-3. **Analyze** the resulting probability distributions (PMF and CDF) and summary statistics using **Python**.
-4. **Interactively play** against the optimal policy engine.
+Anything that rests on an inference rather than a rulebook quotation belongs in
+`worklog/RULES-CHECKLIST.md`. Anything independently derived belongs in a test.
 
-This separation means:
-- **C++ solver** runs once per event to generate the database.
-- **Python tools** can instantly load and use that database without recomputing.
-
----
-
-## 📂 Structure
-
-```
-
-.
-├── analysis/
-│   ├── analyze_100m_pmf.py         # Simple EV/SD analysis for 100m
-│   ├── analyze_100m_pmf_cdf.py     # Full PMF + CDF plots/tables for 100m
-│   ├── analyze_longjump_pmf_cdf.py # Full PMF + CDF plots/tables for Long Jump
-│
-├── players/
-│   ├── 100m.py     # Interactive player for 100m
-│   ├── longjump.py # Interactive player for Long Jump (WIP)
-│
-├── solvers/
-│   ├── decathlon_100m_precompute.cpp # 100m C++ solver
-│   ├── decathlon_100m_solver.py      # 100m pure-Python solver
-│   ├── 100m_precompute               # compiled binary (ignored in git)
-│   ├── 100m_policy.db                 # SQLite DB for 100m
-│   ├── longjump_precompute.cpp        # Long Jump C++ solver
-│   ├── longjump_precompute            # compiled binary (ignored in git)
-│   ├── longjump_policy.db             # SQLite DB for Long Jump
-│
-├── setup_env.sh  # Quick setup script for Python venv
-├── README.md
-
-````
-
----
-
-## ⚙️ Event Details
-
-### 100m Sprint Rules Recap
-- Roll 5 dice up to 3 times.
-- After each roll, choose which dice to keep (“freeze”) and which to reroll.
-- Score is **sum of frozen dice** after the third roll.
-- Goal: maximize the total while minimizing variance from bad rolls.
-
-**Solver approach**:
-- Enumerates all possible (roll, frozen) states.
-- Calculates the optimal choice at each state to maximize expected final score.
-- Stores EV and SD for each state.
-
----
-
-### Long Jump Rules Recap
-- **5 dice**, 3 attempts per event.
-- Each attempt:
-  - **Run-up phase**: Roll remaining dice, freeze ≥1 die each roll, total frozen sum ≤ 8 or foul (0).
-  - **Jump phase**: Roll frozen dice from run-up, freeze ≥1 die per roll until all are frozen.
-- **Final score** = best of the three attempts.
-
-**Solver approach**:
-- Enumerates all states.
-- In run-up: freeze smallest dice possible.
-- In jump: freeze largest dice possible.
-- Best-of-three logic adjusts strategy based on previous attempts.
-
----
-
-## 🚀 Usage
-
-### 1. Build a solver
-Example for Long Jump:
-```bash
-g++ -O3 -std=c++20 solvers/longjump_precompute.cpp -lsqlite3 -o solvers/longjump_precompute
-````
-
-Example for 100m:
-
-```bash
-g++ -O3 -std=c++20 solvers/decathlon_100m_precompute.cpp -lsqlite3 -o solvers/100m_precompute
-```
-
-### 2. Generate policy database
-
-```bash
-./solvers/longjump_precompute solvers/longjump_policy.db
-./solvers/100m_precompute solvers/100m_policy.db
-```
-
-### 3. Analyze distributions
-
-Example for 100m:
-
-```bash
-python3 analysis/analyze_100m_pmf_cdf.py \
-  --db solvers/100m_policy.db \
-  --pmf-out 100m_pmf.png --pmf-csv 100m_pmf.csv \
-  --cdf-out 100m_cdf.png --cdf-txt 100m_cdf.txt \
-  --verbose
-```
-
-Example for Long Jump:
-
-```bash
-python3 analysis/analyze_longjump_pmf_cdf.py \
-  --db solvers/longjump_policy.db \
-  --attempt-pmf longjump_attempt_pmf.png \
-  --attempt-cdf longjump_attempt_cdf.png --attempt-cdf-txt longjump_attempt_cdf.txt \
-  --final-pmf longjump_final_pmf.png \
-  --final-cdf longjump_final_cdf.png --final-cdf-txt longjump_final_cdf.txt \
-  --verbose
-```
-
----
-
-## 🐍 Python Environment Setup
-
-```bash
-bash setup_env.sh
-source .venv/bin/activate
-```
-
-`setup_env.sh` creates a Python virtual environment and installs:
-
-* `matplotlib`
-* `pandas`
-
----
-
-## 📊 Example Outputs
-
-* **PMF plots**: show probability of each score under optimal play.
-* **CDF plots**: show probability of reaching at least a given score.
-* **CSV/TXT tables**: numeric values for analysis or reference.
-
----
-
-## 🔮 Roadmap
-
-All ten events are now solved by the Rust crate (exact optimal-EV DP):
-
-* [x] 100m Sprint
-* [x] Long Jump
-* [x] Shot Put
-* [x] High Jump
-* [x] 400m
-* [x] 110m Hurdles
-* [x] Discus
-* [x] Pole Vault
-* [x] Javelin
-* [x] 1500m
+[sl]: https://github.com/maxjiang216/standard-linter

@@ -17,7 +17,9 @@ use std::collections::HashMap;
 const N_DICE: u32 = 5;
 const RUNUP_LIMIT: i32 = 8;
 
-struct LongJump;
+/// One long-jump attempt (run-up then jump), exposed so tests can
+/// solve a single attempt in isolation.
+pub struct LongJumpAttempt;
 
 struct AttemptSolver<'a> {
     g: &'a dyn Fn(i32) -> f64,
@@ -127,7 +129,7 @@ impl AttemptSolver<'_> {
     }
 }
 
-impl Attempt for LongJump {
+impl Attempt for LongJumpAttempt {
     fn score_hi(&self) -> i32 {
         (N_DICE * 6) as i32 // 30
     }
@@ -177,6 +179,6 @@ pub fn solve() -> Solved {
     Solved {
         key: "longjump",
         name: "Long Jump",
-        dist: best_of_n(3, &LongJump),
+        dist: best_of_n(3, &LongJumpAttempt),
     }
 }

@@ -32,4 +32,8 @@ pub mod analysis;
 pub mod dice;
 pub mod disciplines;
 pub mod dp;
+pub mod game;
 pub mod policy;
+
+#[cfg(feature = "wasm")]
+pub mod wasm;

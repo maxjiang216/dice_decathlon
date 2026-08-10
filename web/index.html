@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Knizia's Decathlon — 100 Metres</title>
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --panel: #ffffff;
+    --ink: #16181d;
+    --muted: #6b7280;
+    --line: #dedbd4;
+    --accent: #b3261e;
+    --accent-ink: #ffffff;
+    --good: #1f7a4d;
+    --bad: #b3261e;
+    --pip: #16181d;
+    --die-bg: #ffffff;
+    --die-line: #c9c5bd;
+    --frozen: #eef3ee;
+    --shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 14px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --panel: #1c1f25;
+      --ink: #e9e7e2;
+      --muted: #9aa1ad;
+      --line: #2c313a;
+      --accent: #e05a50;
+      --accent-ink: #16181d;
+      --good: #4fbf88;
+      --bad: #e05a50;
+      --pip: #16181d;
+      --die-bg: #e9e7e2;
+      --die-line: #8d8a84;
+      --frozen: #22302a;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 2rem 1rem 4rem;
+  }
+  main { max-width: 44rem; margin: 0 auto; }
+
+  header { margin-bottom: 1.5rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 .25rem; letter-spacing: -.01em; }
+  .sub { color: var(--muted); font-size: .9rem; margin: 0; }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.1rem 1.2rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+  }
+
+  .status {
+    display: flex; flex-wrap: wrap; gap: 1.5rem;
+    align-items: baseline; justify-content: space-between;
+  }
+  .stat .k { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .stat .v { font-size: 1.5rem; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .pool { display: flex; gap: .35rem; align-items: center; margin-top: .3rem; }
+  .pool i {
+    width: .7rem; height: .7rem; border-radius: 50%;
+    border: 1px solid var(--die-line); display: block;
+  }
+  .pool i.on { background: var(--accent); border-color: var(--accent); }
+
+  .set + .set { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+  .set-head {
+    display: flex; align-items: center; gap: .6rem;
+    font-size: .78rem; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); margin-bottom: .5rem;
+  }
+  .set.active .set-head { color: var(--accent); font-weight: 700; }
+  .tag {
+    font-size: .68rem; letter-spacing: .06em; padding: .1rem .45rem;
+    border-radius: 999px; border: 1px solid var(--line); color: var(--muted);
+    text-transform: uppercase;
+  }
+  .set.active .tag { border-color: var(--accent); color: var(--accent); }
+
+  .dice { display: flex; gap: .55rem; flex-wrap: wrap; min-height: 3.5rem; align-items: center; }
+
+  .die {
+    width: 3.25rem; height: 3.25rem; border-radius: 10px;
+    background: var(--die-bg); border: 1px solid var(--die-line);
+    display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+    padding: .45rem; box-shadow: var(--shadow);
+  }
+  .die span { width: .55rem; height: .55rem; border-radius: 50%; background: var(--pip); align-self: center; justify-self: center; }
+  .die.six { outline: 2px solid var(--bad); outline-offset: 2px; }
+
+  /* pip positions, by grid area */
+  .p1 { grid-area: 1 / 1; } .p2 { grid-area: 1 / 3; }
+  .p3 { grid-area: 2 / 1; } .p4 { grid-area: 2 / 2; } .p5 { grid-area: 2 / 3; }
+  .p6 { grid-area: 3 / 1; } .p7 { grid-area: 3 / 3; }
+
+  .placeholder {
+    color: var(--muted); font-size: .88rem; font-style: italic;
+  }
+  .frozen-score {
+    display: inline-flex; align-items: baseline; gap: .4rem;
+    background: var(--frozen); border: 1px solid var(--line);
+    border-radius: 8px; padding: .4rem .7rem; font-variant-numeric: tabular-nums;
+  }
+  .frozen-score b { font-size: 1.15rem; }
+
+  .actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+  button {
+    font: inherit; font-weight: 600; cursor: pointer;
+    padding: .6rem 1rem; border-radius: 9px;
+    border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+    transition: transform .05s ease;
+  }
+  button:hover { border-color: var(--muted); }
+  button:active { transform: translateY(1px); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+  .result { text-align: center; padding: .5rem 0; }
+  .result .n { font-size: 3rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+  .result .l { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; }
+
+  details { font-size: .9rem; }
+  summary { cursor: pointer; color: var(--muted); font-weight: 600; }
+  blockquote {
+    margin: .8rem 0 0; padding-left: .9rem; border-left: 3px solid var(--line);
+    color: var(--muted); font-size: .87rem;
+  }
+  ol.log { margin: .6rem 0 0; padding-left: 1.3rem; font-size: .87rem; color: var(--muted); }
+  ol.log li { margin-bottom: .15rem; }
+  ol.log li:last-child { color: var(--ink); }
+  .pos { color: var(--good); } .neg { color: var(--bad); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>100 Metres</h1>
+    <p class="sub">Reiner Knizia's Decathlon — 8 dice, 1 attempt</p>
+  </header>
+
+  <div id="app"><p class="sub">Loading…</p></div>
+
+  <div class="panel">
+    <details>
+      <summary>The rule, as written</summary>
+      <blockquote>
+        Divide the eight dice into two sets of four. Throw the first four dice.
+        If you are not satisfied with the result, pick up all four dice and
+        rethrow them. This can be repeated several times until you freeze the
+        first set. Then throw the other four dice and proceed in the same
+        manner. Try to freeze sets of dice with high values but which contain
+        no sixes.<br><br>
+        You have a maximum of seven throws, one initial throw for each set and
+        up to five rethrows which may be divided between the sets as desired.<br><br>
+        <b>Scoring:</b> Total the value of the dice for numbers one to five,
+        but subtract any sixes from the result.
+      </blockquote>
+      <p class="sub" style="margin-top:.8rem">
+        Optimal play scores <b>23.9975</b> on average (SD 6.19), between −48 and 40.
+      </p>
+    </details>
+  </div>
+</main>
+
+<script type="module">
+import init, { Session } from "./pkg/dice_decathlon.js";
+
+// Pip layouts: which of the seven grid slots are filled, per face.
+const PIPS = {
+  1: [4],
+  2: [1, 7],
+  3: [1, 4, 7],
+  4: [1, 2, 6, 7],
+  5: [1, 2, 4, 6, 7],
+  6: [1, 2, 3, 5, 6, 7],
+};
+
+const app = document.getElementById("app");
+let session = null;
+
+function die(face) {
+  const pips = PIPS[face].map((p) => `<span class="p${p}"></span>`).join("");
+  // A six is the thing you are trying to avoid freezing, so mark it.
+  return `<div class="die${face === 6 ? " six" : ""}" title="${face}">${pips}</div>`;
+}
+
+function signed(n) {
+  const cls = n > 0 ? "pos" : n < 0 ? "neg" : "";
+  return `<span class="${cls}">${n > 0 ? "+" : ""}${n}</span>`;
+}
+
+function renderGroup(g) {
+  let body;
+  if (g.score !== null && g.score !== undefined) {
+    body = `<div class="dice"><div class="frozen-score">frozen for <b>${signed(g.score)}</b></div></div>`;
+  } else if (g.dice.length) {
+    body = `<div class="dice">${g.dice.map((d) => die(d.face)).join("")}</div>`;
+  } else {
+    body = `<div class="dice"><span class="placeholder">not thrown yet</span></div>`;
+  }
+  const tag = g.active ? `<span class="tag">your move</span>` : "";
+  return `<div class="set${g.active ? " active" : ""}">
+    <div class="set-head">${g.label}${tag}</div>${body}</div>`;
+}
+
+function render() {
+  const v = JSON.parse(session.view());
+  const pool = Array.from({ length: v.rerolls_total }, (_, i) =>
+    `<i class="${i < v.rerolls_left ? "on" : ""}"></i>`).join("");
+
+  const head = v.result === null
+    ? `<div class="panel status">
+         <div class="stat"><div class="k">Frozen so far</div>
+              <div class="v">${signed(v.running_score)}</div></div>
+         <div class="stat"><div class="k">Rethrows left</div>
+              <div class="v">${v.rerolls_left} <span style="font-size:.9rem;color:var(--muted)">/ ${v.rerolls_total}</span></div>
+              <div class="pool">${pool}</div></div>
+       </div>`
+    : `<div class="panel result">
+         <div class="n">${signed(v.result)}</div>
+         <div class="l">points</div>
+       </div>`;
+
+  const buttons = v.choices.map((c, i) =>
+    `<button class="${i === 0 ? "primary" : ""}" data-i="${i}" title="${c.detail}">${c.label}</button>`
+  ).join("");
+
+  const actions = v.result === null
+    ? `<div class="panel actions">${buttons}</div>`
+    : `<div class="panel actions"><button class="primary" data-new="1">Run it again</button></div>`;
+
+  app.innerHTML = `${head}
+    <div class="panel">${v.groups.map(renderGroup).join("")}</div>
+    ${actions}
+    <div class="panel"><div class="set-head">Race log</div>
+      <ol class="log">${v.log.map((l) => `<li>${l}</li>`).join("")}</ol></div>`;
+
+  app.querySelectorAll("button[data-i]").forEach((b) => {
+    b.onclick = () => {
+      session.apply(JSON.stringify(v.choices[b.dataset.i].action));
+      render();
+    };
+  });
+  const again = app.querySelector("button[data-new]");
+  if (again) again.onclick = newGame;
+}
+
+function newGame() {
+  // Seed from the browser's CSPRNG, kept under 2^53 so it survives the
+  // f64 trip across the wasm boundary intact.
+  const seed = Number(crypto.getRandomValues(new BigUint64Array(1))[0] >> 11n);
+  session = new Session("100m", seed);
+  render();
+}
+
+await init();
+newGame();
+</script>
+</body>
+</html>
