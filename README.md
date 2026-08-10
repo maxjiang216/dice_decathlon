@@ -118,19 +118,22 @@ src/
   dp.rs               Dist (exact PMF over integer scores) + the optimal-action rule
   disciplines/        the ten solvers and their three shared engines
   game/               interactive rules engines for playing by hand
-  analysis/           PMF/CDF/SVG output
+  analysis.rs         PMF/CDF/SVG output
   wasm.rs             browser bindings (feature `wasm`)
 web/
   index.html          the UI; renders only
   pkg/                wasm-pack output (generated)
+output/               per-event pmf.csv, cdf.txt, summary.json and SVGs
 worklog/              why things are the way they are; start with README.md
 tests/                integration tests, including independently derived values
-solvers/, players/, analysis/
-                      legacy C++/Python pipeline for 100m and Long Jump, superseded
-                      by the Rust crate. The C++ 100m solver averages 126 sorted dice
-                      patterns uniformly instead of by multiplicity, overstating the
-                      event by ~1.45 points; do not read numbers off it.
 ```
+
+The repository is Rust only. A legacy C++/Python pipeline for 100m and Long Jump
+lived under `solvers/`, `players/` and `analysis/`; it was superseded by this crate
+and removed. Its 100m solver averaged 126 sorted dice patterns uniformly instead of
+by multiplicity, overstating the event by ~1.45 points, so any number quoted from it
+elsewhere is wrong. See `worklog/2026-08-09-rules-fidelity-and-web-ui/` for the
+measurement.
 
 ---
 
