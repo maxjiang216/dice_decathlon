@@ -47,6 +47,23 @@ fn best_clear_prob(h: i32) -> f64 {
     (1..=MAX_DICE).map(|k| clear_prob(k, h)).fold(0.0, f64::max)
 }
 
+/// Probability of clearing each height, given three jumps at it and the
+/// best die count for that bar.
+///
+/// Returned as `(height, probability)` from 10 upwards in steps of two.
+/// The whole dice model of the event lives in this table: clearing pays
+/// exactly the bar height, so each jump is a plain Bernoulli trial and
+/// nothing carries between jumps.
+pub fn clear_probabilities() -> Vec<(i32, f64)> {
+    (10..=MAX_HEIGHT)
+        .step_by(2)
+        .map(|h| {
+            let p = best_clear_prob(h);
+            (h, 1.0 - (1.0 - p).powi(JUMPS_PER_HEIGHT))
+        })
+        .collect()
+}
+
 pub fn solve() -> Solved {
     let clear = |h: i32| {
         let p = best_clear_prob(h);

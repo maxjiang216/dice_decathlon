@@ -100,7 +100,8 @@
     padding: .45rem; box-shadow: var(--shadow);
   }
   .die span { width: .55rem; height: .55rem; border-radius: 50%; background: var(--pip); align-self: center; justify-self: center; }
-  .die.six { outline: 2px solid var(--bad); outline-offset: 2px; }
+  /* The face that hurts in this event: colour the pips, not a ring. */
+  .die.warn span { background: var(--bad); }
 
   /* pip positions, by grid area */
   .p1 { grid-area: 1 / 1; } .p2 { grid-area: 1 / 3; }
@@ -142,41 +143,29 @@
   ol.log li { margin-bottom: .15rem; }
   ol.log li:last-child { color: var(--ink); }
   .pos { color: var(--good); } .neg { color: var(--bad); }
+
+.pick { cursor: pointer; display: inline-block; border-radius: 12px;
+        padding: 3px; transition: outline-color .12s, transform .12s;
+        outline: 2px solid transparent; }
+.pick:hover { transform: translateY(-2px); }
+.pick.on { outline-color: currentColor; }
+.held { opacity: .55; display: inline-block; padding: 3px; }
+button[disabled] { opacity: .45; cursor: not-allowed; }
 </style>
 </head>
 <body>
 <main>
   <header>
-    <h1>100 Metres</h1>
-    <p class="sub">Reiner Knizia's Decathlon — 8 dice, 1 attempt</p>
+    <h1 id="title">Knizia's Decathlon</h1>
+    <p class="sub" id="subtitle">Pick an event</p>
   </header>
 
   <div id="app"><p class="sub">Loading…</p></div>
 
-  <div class="panel">
-    <details>
-      <summary>The rule, as written</summary>
-      <blockquote>
-        Divide the eight dice into two sets of four. Throw the first four dice.
-        If you are not satisfied with the result, pick up all four dice and
-        rethrow them. This can be repeated several times until you freeze the
-        first set. Then throw the other four dice and proceed in the same
-        manner. Try to freeze sets of dice with high values but which contain
-        no sixes.<br><br>
-        You have a maximum of seven throws, one initial throw for each set and
-        up to five rethrows which may be divided between the sets as desired.<br><br>
-        <b>Scoring:</b> Total the value of the dice for numbers one to five,
-        but subtract any sixes from the result.
-      </blockquote>
-      <p class="sub" style="margin-top:.8rem">
-        Optimal play scores <b>23.9975</b> on average (SD 6.19), between −48 and 40.
-      </p>
-    </details>
-  </div>
 </main>
 
 <script type="module">
-import init, { Session } from "./pkg/dice_decathlon.js";
+import init, { Session, catalogue } from "./pkg/dice_decathlon.js";
 
 // Pip layouts: which of the seven grid slots are filled, per face.
 const PIPS = {
@@ -191,10 +180,15 @@ const PIPS = {
 const app = document.getElementById("app");
 let session = null;
 
+// The face this event punishes, or null. A six only subtracts in the
+// 100m, 400m and 1500m; the shot put and pole vault are spoiled by a one;
+// in the discus a six is the best die on the table.
+let warnFace = null;
+
 function die(face) {
   const pips = PIPS[face].map((p) => `<span class="p${p}"></span>`).join("");
-  // A six is the thing you are trying to avoid freezing, so mark it.
-  return `<div class="die${face === 6 ? " six" : ""}" title="${face}">${pips}</div>`;
+  const bad = warnFace !== null && face === warnFace;
+  return `<div class="die${bad ? " warn" : ""}" title="${face}${bad ? " — costs you here" : ""}">${pips}</div>`;
 }
 
 function signed(n) {
@@ -202,12 +196,53 @@ function signed(n) {
   return `<span class="${cls}">${n > 0 ? "+" : ""}${n}</span>`;
 }
 
+// Dice the player has picked out to freeze, as indices into the loose
+// (unfrozen) dice of the active group. Cleared whenever the position
+// changes, since the indices only mean anything for one throw.
+let picked = new Set();
+
+// The Keep choices the engine offers, deduplicated on (count, sum). A
+// selection is legal exactly when some offered Keep agrees with it on
+// both, which is why we can let the player click any dice they like and
+// still only ever send a move the engine will accept.
+function keepChoices(v) {
+  return v.choices
+    .map((c, i) => ({ c, i }))
+    .filter((x) => x.c.action.kind === "keep");
+}
+
+function looseDice(v) {
+  const g = v.groups.find((g) => g.active);
+  return g ? g.dice.filter((d) => !d.frozen) : [];
+}
+
+// Index into `v.choices` of the Keep matching the current selection, or
+// -1 if this selection is not a legal freeze.
+function matchingKeep(v) {
+  const loose = looseDice(v);
+  const sum = [...picked].reduce((a, i) => a + loose[i].face, 0);
+  for (const { c, i } of keepChoices(v)) {
+    const other = c.action.dice;
+    const osum = other.reduce((a, j) => a + loose[j].face, 0);
+    if (other.length === picked.size && osum === sum) return i;
+  }
+  return -1;
+}
+
 function renderGroup(g) {
   let body;
   if (g.score !== null && g.score !== undefined) {
     body = `<div class="dice"><div class="frozen-score">frozen for <b>${signed(g.score)}</b></div></div>`;
   } else if (g.dice.length) {
-    body = `<div class="dice">${g.dice.map((d) => die(d.face)).join("")}</div>`;
+    let loose = -1;
+    body = `<div class="dice">${g.dice
+      .map((d) => {
+        if (d.frozen) return `<span class="held">${die(d.face)}</span>`;
+        loose += 1;
+        const on = picked.has(loose);
+        return `<span class="pick${on ? " on" : ""}" data-loose="${loose}">${die(d.face)}</span>`;
+      })
+      .join("")}</div>`;
   } else {
     body = `<div class="dice"><span class="placeholder">not thrown yet</span></div>`;
   }
@@ -218,6 +253,14 @@ function renderGroup(g) {
 
 function render() {
   const v = JSON.parse(session.view());
+  warnFace = v.warn_face ?? null;
+  document.getElementById("title").textContent = v.name;
+  const bits = [];
+  if (v.attempt) bits.push(`Attempt ${v.attempt} of ${v.attempts_total}`);
+  if (v.bar !== null && v.bar !== undefined) bits.push(`Bar ${v.bar}`);
+  if (v.best) bits.push(`Best ${v.best}`);
+  document.getElementById("subtitle").textContent =
+    bits.length ? bits.join(" \u00b7 ") : "Reiner Knizia's Decathlon";
   const pool = Array.from({ length: v.rerolls_total }, (_, i) =>
     `<i class="${i < v.rerolls_left ? "on" : ""}"></i>`).join("");
 
@@ -234,9 +277,30 @@ function render() {
          <div class="l">points</div>
        </div>`;
 
-  const buttons = v.choices.map((c, i) =>
-    `<button class="${i === 0 ? "primary" : ""}" data-i="${i}" title="${c.detail}">${c.label}</button>`
-  ).join("");
+  // Freezing is done by clicking dice, so the long deduplicated Keep list
+  // is replaced by one confirm button; everything else stays a button.
+  const keeps = keepChoices(v);
+  const plain = v.choices
+    .map((c, i) => ({ c, i }))
+    .filter((x) => x.c.action.kind !== "keep");
+  let buttons = "";
+  if (keeps.length) {
+    const match = matchingKeep(v);
+    const loose = looseDice(v);
+    const sum = [...picked].reduce((a, i) => a + loose[i].face, 0);
+    buttons +=
+      `<button class="primary" data-i="${match}" ${match < 0 ? "disabled" : ""}>` +
+      (picked.size
+        ? `Freeze ${picked.size} die${picked.size > 1 ? "s" : ""} (+${sum})`
+        : `Click dice to freeze`) +
+      `</button>`;
+  }
+  buttons += plain
+    .map(
+      (x, n) =>
+        `<button class="${!keeps.length && n === 0 ? "primary" : ""}" data-i="${x.i}" title="${x.c.detail}">${x.c.label}</button>`
+    )
+    .join("");
 
   const actions = v.result === null
     ? `<div class="panel actions">${buttons}</div>`
@@ -248,26 +312,100 @@ function render() {
     <div class="panel"><div class="set-head">Race log</div>
       <ol class="log">${v.log.map((l) => `<li>${l}</li>`).join("")}</ol></div>`;
 
+  app.querySelectorAll("[data-loose]").forEach((el) => {
+    el.onclick = () => {
+      const i = Number(el.dataset.loose);
+      if (picked.has(i)) picked.delete(i);
+      else picked.add(i);
+      render();
+    };
+  });
   app.querySelectorAll("button[data-i]").forEach((b) => {
     b.onclick = () => {
-      session.apply(JSON.stringify(v.choices[b.dataset.i].action));
+      const i = Number(b.dataset.i);
+      if (i < 0) return;
+      session.apply(JSON.stringify(v.choices[i].action));
+      picked = new Set(); // indices only mean anything for one throw
       render();
     };
   });
   const again = app.querySelector("button[data-new]");
   if (again) again.onclick = newGame;
+  if (v.sheet) {
+    const sheet = document.createElement("div");
+    sheet.className = "panel";
+    sheet.innerHTML =
+      `<p class="sub" style="margin:0 0 .6rem">Scoresheet — total <b>${v.total}</b></p>` +
+      `<div class="dice">` +
+      events
+        .map((e, i) => {
+          const sc = v.sheet[i];
+          const now = i === v.event_index && v.result === null;
+          return `<div class="frozen-score" style="${now ? "outline:2px solid currentColor" : ""}">
+                    ${e.name}<br><b>${sc === null ? (now ? "…" : "-") : sc}</b>
+                  </div>`;
+        })
+        .join("") +
+      `</div>`;
+    app.appendChild(sheet);
+  }
+  const back = document.createElement("div");
+  back.className = "panel actions";
+  back.innerHTML =
+    `<button data-menu="1">\u2190 All events</button>` +
+    `<button data-replay="1">New game</button>`;
+  app.appendChild(back);
+  back.querySelector("[data-menu]").onclick = showMenu;
+  back.querySelector("[data-replay]").onclick = newGame;
 }
 
-function newGame() {
-  // Seed from the browser's CSPRNG, kept under 2^53 so it survives the
-  // f64 trip across the wasm boundary intact.
-  const seed = Number(crypto.getRandomValues(new BigUint64Array(1))[0] >> 11n);
-  session = new Session("100m", seed);
+// Seed from the browser's CSPRNG, kept under 2^53 so it survives the
+// f64 trip across the wasm boundary intact.
+function freshSeed() {
+  return Number(crypto.getRandomValues(new BigUint64Array(1))[0] >> 11n);
+}
+
+let events = [];
+let current = null;
+
+function showMenu() {
+  session = null;
+  current = null;
+  document.getElementById("title").textContent = "Knizia's Decathlon";
+  document.getElementById("subtitle").textContent =
+    "Ten events. Pick one to play.";
+  app.innerHTML =
+    `<div class="panel">
+       <div class="actions">
+         <button class="primary" data-key="decathlon">Play the whole Decathlon</button>
+       </div>
+       <p class="sub" style="margin:.8rem 0 0">All ten events in order, one running total.</p>
+     </div>
+     <div class="panel">
+       <p class="sub" style="margin:0 0 .8rem">Or a single event:</p>
+       <div class="actions">` +
+    events.map((e) => `<button data-key="${e.key}">${e.name}</button>`).join("") +
+    `</div></div>`;
+  app.querySelectorAll("button[data-key]").forEach((b) => {
+    b.onclick = () => startEvent(b.dataset.key);
+  });
+}
+
+function startEvent(key) {
+  picked = new Set();
+  current = key;
+  session = new Session(key, freshSeed());
   render();
 }
 
+function newGame() {
+  if (current) startEvent(current);
+  else showMenu();
+}
+
 await init();
-newGame();
+events = JSON.parse(catalogue());
+showMenu();
 </script>
 </body>
 </html>

@@ -58,6 +58,22 @@ impl Session {
     }
 }
 
+/// Playable disciplines as JSON `[{"key":..,"name":..}]`, in rulebook
+/// order — what the menu lists.
+///
+/// # Panics
+///
+/// Panics only if serialising a list of string literals fails.
+#[wasm_bindgen]
+#[must_use]
+pub fn catalogue() -> String {
+    let items: Vec<_> = game::catalogue()
+        .into_iter()
+        .map(|(key, name)| serde_json::json!({ "key": key, "name": name }))
+        .collect();
+    serde_json::to_string(&items).expect("string list serialises")
+}
+
 /// Keys of the disciplines that can be played interactively, as a JSON
 /// array of strings.
 ///
