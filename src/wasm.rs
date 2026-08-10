@@ -25,14 +25,14 @@ impl Session {
     ///
     /// Returns an error if `key` names no playable discipline.
     #[wasm_bindgen(constructor)]
-    pub fn new(key: &str, seed: f64) -> Result<Session, JsValue> {
+    pub fn new(key: &str, seed: f64) -> Result<Self, JsValue> {
         // JS numbers reach us as f64; the page passes an integer below
         // 2^53 so this round-trips exactly.
         let mut rng = Rng::new(seed.abs() as u64);
         let game = game::start(key, &mut rng).ok_or_else(|| {
             JsValue::from_str(&format!("no playable engine for {key}"))
         })?;
-        Ok(Session { game, rng })
+        Ok(Self { game, rng })
     }
 
     /// The current position, as JSON matching `game::View`.
