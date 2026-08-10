@@ -18,7 +18,11 @@
 - **The Championship variant looks an order of magnitude cheaper** and is the plausible
   route to 3-4 players. Medals bound the cross-event coupling variable to ~21 values
   instead of ~400.
-- No code written. This entry is the sizing argument that says the code is worth writing.
+- No solver code written. This entry is the sizing argument that says the code is worth
+  writing.
+- Separately, **the legacy C++/Python pipeline was deleted** and a bug found in
+  `scripts/lint.sh` that had been silently stopping it after its first check — so
+  `cargo clippy` had never run locally. Fixed here and upstream.
 
 ---
 
@@ -274,9 +278,36 @@ Sweeping `2026-08-09-01-auditing-ten-solvers-against-two-pages.md`.
   is too large to solve on load". For the *solo* policies that stands. For the two-player
   policy the answer is neither: a single `d`-slice is ~200 MB and sub-second, so the
   current event can be solved on demand at the point the diff is known.
-- **Housekeeping** — untracked artifacts in the repo root and 16 MB of `.db` files under
+- ~~**Housekeeping** — untracked artifacts in the repo root and 16 MB of `.db` files under
   `solvers/`; gitignored, but whether to delete the superseded (and measurably wrong) C++/
-  Python pipeline outright is still open.
+  Python pipeline outright is still open.~~ *Closed later the same day:* deleted. See
+  below.
+
+### Cleanup, same session
+
+The legacy pipeline is gone — `solvers/`, `players/`, `analysis/` and `setup_env.sh`,
+plus the untracked plot artifacts, the two compiled C++ binaries and the two 16 MB policy
+databases. The repository is now Rust only. `output/` was kept: it is written by
+`cargo run --release -- analyze`, so it is solver output rather than legacy residue, and
+it is the only place the ten distributions can be read without running anything.
+
+`.venv/` went with them. It held matplotlib for the deleted plotting scripts, and it was
+the reason `lint.sh` ran its Python block at all — the block's `find . -name "*.py"` was
+matching 1,587 files inside the virtualenv even after every `.py` in the project was gone.
+
+**`scripts/lint.sh` had a bug that hid all of this.** `((passed++))` returns exit status 1
+when the counter is 0 — post-increment evaluates to the old value, and `((expr))` fails
+when `expr` is zero — which under the script's own `set -euo pipefail` aborts it. So
+lint.sh has **never run more than one check** in this repo: the Python block came first,
+died, and `cargo clippy` was never reached locally. It stayed invisible because the first
+check was failing anyway on the legacy Python, so the abort looked like an ordinary
+failure. Fixed here, and upstream in
+[standard-linter#4](https://github.com/maxjiang216/standard-linter/pull/4), since this
+file is vendored and the fix would otherwise be lost on the next copy. CI was never
+affected — it calls the standard-linter workflow directly rather than this script, which
+is why the clippy error in `270a7bd` was still caught.
+
+`bash scripts/lint.sh` now exits 0 with rustfmt and clippy both green.
 
 ---
 
