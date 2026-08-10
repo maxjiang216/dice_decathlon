@@ -10,6 +10,7 @@
 //! JavaScript means there is one implementation of the rulebook to audit,
 //! not two that can drift apart. The page is a renderer.
 
+pub mod freeze;
 pub mod ladder;
 pub mod rng;
 pub mod running;
@@ -37,6 +38,11 @@ pub enum Action {
     /// Take a jump at the current bar. `dice` is how many to throw,
     /// which only the pole vault lets you choose.
     Attempt { dice: Option<u8> },
+    /// Lock the named dice (indices into the dice on the table) and
+    /// keep the attempt alive.
+    Keep { dice: Vec<u8> },
+    /// End the attempt here and bank what is frozen.
+    Stop,
     /// Decline the current bar and move to the next one.
     ///
     /// Free — you keep your best and stay in — which is why it is
@@ -97,6 +103,10 @@ pub struct View {
     pub jumps_total: Option<u32>,
     /// Best height cleared so far, in the jumping events.
     pub best: Option<i32>,
+    /// Attempt being played, in the best-of-three events.
+    pub attempt: Option<u32>,
+    /// Attempts each player gets.
+    pub attempts_total: Option<u32>,
 }
 
 /// A discipline that can be played move by move.
@@ -124,5 +134,6 @@ pub fn playable() -> Vec<&'static str> {
         .iter()
         .map(|r| r.key)
         .chain(ladder::LADDERS.iter().map(|r| r.key))
+        .chain(freeze::FREEZE.iter().map(|r| r.key))
         .collect()
 }

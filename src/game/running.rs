@@ -243,6 +243,8 @@ impl Game for Running {
             jumps_used: None,
             jumps_total: None,
             best: None,
+            attempt: None,
+            attempts_total: None,
         }
     }
 
@@ -269,7 +271,10 @@ impl Game for Running {
                 ));
                 true
             }
-            Action::Attempt { .. } | Action::Skip => false,
+            Action::Attempt { .. }
+            | Action::Skip
+            | Action::Keep { .. }
+            | Action::Stop => false,
             Action::Freeze => {
                 let score = self.showing();
                 self.log.push(format!(

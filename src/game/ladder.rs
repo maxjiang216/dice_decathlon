@@ -216,6 +216,8 @@ impl Game for Ladder {
             jumps_used: Some(self.jumps_used),
             jumps_total: Some(JUMPS),
             best: Some(self.best),
+            attempt: None,
+            attempts_total: None,
         }
     }
 
@@ -266,7 +268,10 @@ impl Game for Ladder {
                 }
                 true
             }
-            Action::Freeze | Action::Reroll => false,
+            Action::Freeze
+            | Action::Reroll
+            | Action::Keep { .. }
+            | Action::Stop => false,
         }
     }
 }
