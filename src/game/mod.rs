@@ -10,6 +10,7 @@
 //! JavaScript means there is one implementation of the rulebook to audit,
 //! not two that can drift apart. The page is a renderer.
 
+pub mod ladder;
 pub mod rng;
 pub mod running;
 
@@ -33,6 +34,14 @@ pub enum Action {
     Reroll,
     /// Lock the active dice as they stand.
     Freeze,
+    /// Take a jump at the current bar. `dice` is how many to throw,
+    /// which only the pole vault lets you choose.
+    Attempt { dice: Option<u8> },
+    /// Decline the current bar and move to the next one.
+    ///
+    /// Free — you keep your best and stay in — which is why it is
+    /// sometimes right even though it scores nothing.
+    Skip,
 }
 
 /// A labelled action, ready to be drawn as a button.
@@ -80,6 +89,14 @@ pub struct View {
     pub result: Option<i32>,
     /// Human-readable history of the attempt, oldest first.
     pub log: Vec<String>,
+    /// Bar being faced, in the jumping events.
+    pub bar: Option<i32>,
+    /// Jumps already used at this bar.
+    pub jumps_used: Option<u32>,
+    /// Jumps allowed at each bar.
+    pub jumps_total: Option<u32>,
+    /// Best height cleared so far, in the jumping events.
+    pub best: Option<i32>,
 }
 
 /// A discipline that can be played move by move.
@@ -103,5 +120,9 @@ pub fn start(key: &str, rng: &mut rng::Rng) -> Option<Box<dyn Game>> {
 /// Keys of the disciplines that can currently be played interactively.
 #[must_use]
 pub fn playable() -> Vec<&'static str> {
-    running::RUNNING.iter().map(|r| r.key).collect()
+    running::RUNNING
+        .iter()
+        .map(|r| r.key)
+        .chain(ladder::LADDERS.iter().map(|r| r.key))
+        .collect()
 }

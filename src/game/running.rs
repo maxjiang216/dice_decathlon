@@ -239,6 +239,10 @@ impl Game for Running {
             choices,
             result: if self.finished() { Some(running) } else { None },
             log: self.log.clone(),
+            bar: None,
+            jumps_used: None,
+            jumps_total: None,
+            best: None,
         }
     }
 
@@ -265,6 +269,7 @@ impl Game for Running {
                 ));
                 true
             }
+            Action::Attempt { .. } | Action::Skip => false,
             Action::Freeze => {
                 let score = self.showing();
                 self.log.push(format!(
