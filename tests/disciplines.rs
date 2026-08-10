@@ -62,6 +62,37 @@ fn longjump_beats_old_heuristic() {
     assert!(ev >= 20.41, "long jump EV {ev} below heuristic 20.41");
 }
 
+/// Every discipline's expected value under optimal play, pinned against
+/// an independent brute force written from the rulebook alone (see
+/// `worklog/2026-08-09-rules-fidelity-and-web-ui/`). These are not
+/// snapshots of our own output: each was reproduced to nine decimal
+/// places by a separate implementation that shares no code with the
+/// solvers, so a regression here means a real behaviour change.
+#[test]
+fn expected_values_match_independent_brute_force() {
+    let expected: &[(&str, f64)] = &[
+        ("100m", 23.997_512_229),
+        ("longjump", 22.394_956_800),
+        ("shotput", 18.634_491_985),
+        ("highjump", 19.263_445_441),
+        ("400m", 25.667_993_300),
+        ("110mh", 21.375_403_087),
+        ("discus", 22.317_089_285),
+        ("polevault", 17.277_634_238),
+        ("javelin", 22.251_507_501),
+        ("1500m", 26.528_791_924),
+    ];
+
+    for &(key, want) in expected {
+        let solver = disciplines::find(key).expect("registered discipline");
+        let got = solver().dist.mean();
+        assert!(
+            (got - want).abs() < 1e-8,
+            "{key} EV {got} != independently derived {want}"
+        );
+    }
+}
+
 /// 100m spans every set of eight dice: all sixes (-48) to all fives.
 #[test]
 fn hundred_metres_score_range() {

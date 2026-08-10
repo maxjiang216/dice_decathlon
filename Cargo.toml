@@ -4,6 +4,13 @@ version = "0.1.0"
 edition = "2021"
 description = "Optimal expected-value DP solvers for Knizia's Decathlon dice game"
 
+[lib]
+name = "dice_decathlon"
+path = "src/lib.rs"
+# `cdylib` is what wasm-pack links for the browser build; `rlib` keeps the
+# CLI and the test binaries able to depend on the same crate.
+crate-type = ["cdylib", "rlib"]
+
 [[bin]]
 name = "decathlon"
 path = "src/main.rs"
@@ -12,6 +19,11 @@ path = "src/main.rs"
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+wasm-bindgen = { version = "0.2", optional = true }
+
+[features]
+# Enables the browser bindings in `src/wasm.rs`; off for the CLI build.
+wasm = ["dep:wasm-bindgen"]
 
 [profile.release]
 opt-level = 3

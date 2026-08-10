@@ -11,3 +11,20 @@ clippy.toml
 __pycache__/
 *.pyc
 .vscode/
+
+# Generated analysis artifacts (regenerate with `cargo run -- analyze`)
+/output/
+/100m_*.png
+/100m_*.csv
+/100m_*.txt
+/longjump_*.png
+/longjump_*.txt
+
+# Legacy C++ solver binaries and their policy databases (superseded by the
+# Rust crate; the 100m one is also known to be mis-weighted -- see
+# worklog/2026-08-09-rules-fidelity-and-web-ui/)
+/solvers/*_precompute
+/solvers/*.db
+
+# wasm-pack output for the web UI (rebuild with scripts/serve_web.sh)
+/web/pkg/
