@@ -299,7 +299,7 @@ impl Game for Freeze {
         if self.finished() || self.fouled {
             return false;
         }
-        if let Action::Roll = action {
+        if matches!(action, Action::Roll) {
             if !self.pending {
                 return false;
             }

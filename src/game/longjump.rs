@@ -288,7 +288,7 @@ impl Game for LongJump {
         if self.finished() {
             return false;
         }
-        if let Action::Roll = action {
+        if matches!(action, Action::Roll) {
             if !self.pending {
                 return false;
             }

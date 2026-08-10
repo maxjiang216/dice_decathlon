@@ -33,7 +33,7 @@ pub struct ShotPut {
 impl ShotPut {
     /// Start the event and throw the first attempt's compulsory die.
     pub fn new(rng: &mut Rng) -> Self {
-        let mut g = Self {
+        let g = Self {
             best: 0,
             played: 0,
             thrown: Vec::new(),
@@ -177,7 +177,7 @@ impl Game for ShotPut {
         if self.finished() {
             return false;
         }
-        if let Action::Roll = action {
+        if matches!(action, Action::Roll) {
             if !self.pending {
                 return false;
             }
