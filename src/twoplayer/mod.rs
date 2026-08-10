@@ -15,10 +15,13 @@ pub mod best_of_three;
 pub mod compress;
 pub mod discus;
 pub mod freeze;
+pub mod highjump;
 pub mod javelin;
+pub mod ladder;
 pub mod m1500;
 pub mod polevault;
 pub mod reroll_sets;
+pub mod running;
 
 /// Values within this of each other count as tied, and values this close
 /// to 0 or 1 are clamped to exactly 0 or 1.

@@ -47,7 +47,7 @@ enum Command {
 /// everything after it, and only the 1500m stands alone.
 fn storage_report() {
     use dice_decathlon::twoplayer::{
-        compress, discus, javelin, m1500, polevault, Axis,
+        compress, discus, highjump, javelin, m1500, polevault, running, Axis,
     };
 
     /// Read a first-mover value function at any difference.
@@ -80,6 +80,22 @@ fn storage_report() {
     let v7 = move |d: i32| as_player(&pv, pv_axis, d);
 
     let dis_axis = Axis::first_mover(Axis::for_event(309, 196, 30).hi);
+    let dis = discus::solve_first_mover(dis_axis, &v7);
+    let v6 = move |d: i32| as_player(&dis, dis_axis, d);
+
+    // The running events keep the full axis: their difference is a state
+    // variable, so play starting level still visits negative differences.
+    let hur_axis = Axis::for_event(284, 221, 30);
+    let hurdles = running::hurdles();
+    let hur = hurdles.solve_first_mover(hur_axis, &v6);
+    let v5 = move |d: i32| as_player(&hur, hur_axis, d);
+
+    let m400_axis = Axis::for_event(196, 309, 78);
+    let m400 = running::m400();
+    let f400 = m400.solve_first_mover(m400_axis, &v5);
+    let v4 = move |d: i32| as_player(&f400, m400_axis, d);
+
+    let hj_axis = Axis::first_mover(Axis::for_event(166, 339, 30).hi);
 
     println!(
         "{:10} {:>13} {:>12} {:>11} {:>10} {:>10}  {:>7}  {:>6}",
@@ -104,6 +120,15 @@ fn storage_report() {
     println!(
         "{}",
         compress::report("discus", discus::measure(dis_axis, &v7))
+    );
+    println!(
+        "{}",
+        compress::report("110mh", hurdles.measure(hur_axis, &v6))
+    );
+    println!("{}", compress::report("400m", m400.measure(m400_axis, &v5)));
+    println!(
+        "{}",
+        compress::report("highjump", highjump::measure(hj_axis, &v4))
     );
 }
 

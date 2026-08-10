@@ -11,7 +11,7 @@
 //! `n` is the running point difference with the sets frozen so far
 //! already folded in. Scores add, so nothing else need be carried.
 
-use super::Axis;
+use super::{clamp_prob, Axis};
 
 /// Where in an event a decision is being taken.
 #[derive(Clone, Copy)]
@@ -170,5 +170,125 @@ impl RerollSets {
             f64::NEG_INFINITY
         };
         (freeze, reroll)
+    }
+}
+
+impl RerollSets {
+    /// Build the event from its geometry.
+    pub fn new(sets: u8, per_set: u32, rerolls: u8, six_penalty: bool) -> Self {
+        let (set_scores, total) =
+            Self::set_score_distribution(per_set, six_penalty);
+        Self {
+            sets,
+            rerolls,
+            set_scores,
+            total,
+        }
+    }
+
+    /// Largest magnitude the event's own score can reach, either way.
+    ///
+    /// Used to widen the axis the second mover needs: they face whatever
+    /// difference the first mover leaves behind.
+    pub fn score_reach(&self) -> i32 {
+        let lo = self.set_scores.first().map_or(0, |&(s, _)| s)
+            * i32::from(self.sets);
+        let hi = self.set_scores.last().map_or(0, |&(s, _)| s)
+            * i32::from(self.sets);
+        lo.abs().max(hi.abs())
+    }
+
+    /// Win probability of the player moving **second**, as a function of
+    /// the difference they face once the first mover has finished.
+    fn second_mover(
+        &self,
+        axis: Axis,
+        after: &(dyn Fn(i32) -> f64 + Sync),
+    ) -> Vec<f64> {
+        self.solve(axis, after)
+            .into_iter()
+            .map(clamp_prob)
+            .collect()
+    }
+
+    /// Win probability of the player who moves **first**.
+    ///
+    /// These events do not interleave — one attempt each, so the first
+    /// mover plays their whole event before the second starts, and the
+    /// second then knows exactly what to beat.
+    pub fn solve_first_mover(
+        &self,
+        axis: Axis,
+        after: &(dyn Fn(i32) -> f64 + Sync),
+    ) -> Vec<f64> {
+        let wide = Axis::symmetric(axis.hi + self.score_reach());
+        let second = self.second_mover(wide, after);
+        // The first mover gets whatever the second fails to win. The sign
+        // flips because `second` is written from the opponent's side.
+        let terminal = move |n: i32| 1.0 - second[wide.idx(-n)];
+        self.solve(axis, &terminal)
+            .into_iter()
+            .map(clamp_prob)
+            .collect()
+    }
+
+    /// Measure how far the event's two-player policy compresses.
+    ///
+    /// The EV-optimal policy is this same dynamic program with the
+    /// identity as its terminal payoff: maximising the final difference
+    /// is exactly maximising the event score, and it does not depend on
+    /// the difference at all.
+    pub fn measure(
+        &self,
+        axis: Axis,
+        after: &(dyn Fn(i32) -> f64 + Sync),
+    ) -> super::compress::Stats {
+        let identity = |n: i32| f64::from(n);
+        let ev_layers = self.solve_layers(axis, &identity);
+
+        let wide = Axis::symmetric(axis.hi + self.score_reach());
+        let second = self.second_mover(wide, after);
+        let terminal = move |n: i32| 1.0 - second[wide.idx(-n)];
+        let layers = self.solve_layers(axis, &terminal);
+
+        let sets = self.sets as usize;
+        let nr = self.rerolls as usize + 1;
+        let control = sets * nr * self.set_scores.len();
+        let mut runs = super::compress::RunCounter::new(control);
+        let mut chosen = vec![0u8; control];
+        let mut deviates = vec![false; control];
+
+        for n in axis.iter() {
+            let mut i = 0;
+            for set in 0..sets {
+                for r in 0..nr {
+                    for &(score, _) in &self.set_scores {
+                        let at = Decision { set, r, score, n };
+                        let (f, rr) =
+                            self.branch_values(&layers, axis, &terminal, at);
+                        let (ef, err) =
+                            self.branch_values(&ev_layers, axis, &identity, at);
+                        let ev_freeze = ef >= err;
+                        let used = if ev_freeze { f } else { rr };
+                        let dev =
+                            super::compress::is_deviation(f.max(rr), used);
+                        deviates[i] = dev;
+                        chosen[i] =
+                            u8::from(if dev { f >= rr } else { ev_freeze });
+                        i += 1;
+                    }
+                }
+            }
+            runs.push(&chosen, &deviates);
+        }
+
+        super::compress::Stats {
+            control: control as u64,
+            axis: axis.len() as u64,
+            deviations: runs.deviations,
+            dev_control: runs.dev_control(),
+            action_bits: 1,
+            idx_bytes: if axis.len() <= 256 { 1 } else { 2 },
+        }
     }
 }
