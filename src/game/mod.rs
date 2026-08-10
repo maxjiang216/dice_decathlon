@@ -10,6 +10,7 @@
 //! JavaScript means there is one implementation of the rulebook to audit,
 //! not two that can drift apart. The page is a renderer.
 
+pub mod decathlon;
 pub mod freeze;
 pub mod ladder;
 pub mod longjump;
@@ -109,6 +110,12 @@ pub struct View {
     pub attempt: Option<u32>,
     /// Attempts each player gets.
     pub attempts_total: Option<u32>,
+    /// Score of each event so far, when playing the full competition.
+    pub sheet: Option<Vec<Option<i32>>>,
+    /// Index of the event under way, in rulebook order.
+    pub event_index: Option<usize>,
+    /// Total across the events already finished.
+    pub total: Option<i32>,
 }
 
 /// A discipline that can be played move by move.
@@ -137,6 +144,9 @@ pub fn start(key: &str, rng: &mut rng::Rng) -> Option<Box<dyn Game>> {
     match key {
         "shotput" => Some(Box::new(shotput::ShotPut::new(rng))),
         "longjump" => Some(Box::new(longjump::LongJump::new(rng))),
+        // The whole competition, wrapping each event in turn. Not in
+        // `catalogue`, which lists the individual disciplines.
+        "decathlon" => Some(Box::new(decathlon::Decathlon::new(rng))),
         _ => None,
     }
 }

@@ -243,6 +243,24 @@ function render() {
   });
   const again = app.querySelector("button[data-new]");
   if (again) again.onclick = newGame;
+  if (v.sheet) {
+    const sheet = document.createElement("div");
+    sheet.className = "panel";
+    sheet.innerHTML =
+      `<p class="sub" style="margin:0 0 .6rem">Scoresheet — total <b>${v.total}</b></p>` +
+      `<div class="dice">` +
+      events
+        .map((e, i) => {
+          const sc = v.sheet[i];
+          const now = i === v.event_index && v.result === null;
+          return `<div class="frozen-score" style="${now ? "outline:2px solid currentColor" : ""}">
+                    ${e.name}<br><b>${sc === null ? (now ? "…" : "-") : sc}</b>
+                  </div>`;
+        })
+        .join("") +
+      `</div>`;
+    app.appendChild(sheet);
+  }
   const back = document.createElement("div");
   back.className = "panel actions";
   back.innerHTML =
@@ -269,13 +287,16 @@ function showMenu() {
   document.getElementById("subtitle").textContent =
     "Ten events. Pick one to play.";
   app.innerHTML =
-    `<div class="panel"><div class="actions">` +
-    events
-      .map(
-        (e, i) =>
-          `<button class="${i === 0 ? "primary" : ""}" data-key="${e.key}">${e.name}</button>`
-      )
-      .join("") +
+    `<div class="panel">
+       <div class="actions">
+         <button class="primary" data-key="decathlon">Play the whole Decathlon</button>
+       </div>
+       <p class="sub" style="margin:.8rem 0 0">All ten events in order, one running total.</p>
+     </div>
+     <div class="panel">
+       <p class="sub" style="margin:0 0 .8rem">Or a single event:</p>
+       <div class="actions">` +
+    events.map((e) => `<button data-key="${e.key}">${e.name}</button>`).join("") +
     `</div></div>`;
   app.querySelectorAll("button[data-key]").forEach((b) => {
     b.onclick = () => startEvent(b.dataset.key);

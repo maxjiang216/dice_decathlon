@@ -245,6 +245,9 @@ impl Game for Running {
             best: None,
             attempt: None,
             attempts_total: None,
+            sheet: None,
+            event_index: None,
+            total: None,
         }
     }
 

@@ -218,6 +218,9 @@ impl Game for Ladder {
             best: Some(self.best),
             attempt: None,
             attempts_total: None,
+            sheet: None,
+            event_index: None,
+            total: None,
         }
     }
 

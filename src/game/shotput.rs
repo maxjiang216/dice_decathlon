@@ -151,6 +151,9 @@ impl Game for ShotPut {
             best: Some(self.best),
             attempt: Some(self.played + 1),
             attempts_total: Some(ATTEMPTS),
+            sheet: None,
+            event_index: None,
+            total: None,
         }
     }
 
