@@ -67,6 +67,15 @@ Status key: `[ ]` open · `[x]` closed, with what closed it.
   preserve a shot at a higher bar — exactly the manoeuvre a trailing player wants. A
   different reading changes optimal play here.
 
+- [ ] **Multiplayer does not yet interleave attempts or heights.** The rulebook says
+  *"all first attempts are played first, then all second attempts, and so on"*, and the
+  same for heights. `game::meet` currently has each player finish their event before the
+  next begins. Exact for the four single-attempt events; an approximation for the other
+  six, where it hands the later player **more** information than the rules allow — they
+  see all three of an opponent's attempts rather than one at a time. *Watch for:* the
+  two-player solver models the interleaved game, so a policy taken from it is being asked
+  to play a slightly different game than it was solved for.
+
 - [ ] **Shot put forces the first die.** "Throw one die after the other. At any point you
   can stop" does not say whether you may stop before throwing anything. We require at
   least one throw. Harmless under the current objective — an empty attempt would score 0,

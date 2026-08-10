@@ -14,6 +14,7 @@ pub mod decathlon;
 pub mod freeze;
 pub mod ladder;
 pub mod longjump;
+pub mod meet;
 pub mod rng;
 pub mod running;
 pub mod shotput;
