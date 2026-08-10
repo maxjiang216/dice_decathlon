@@ -155,6 +155,14 @@ impl Chain {
         }
     }
 
+    /// A closure giving the value of a difference *after* `event` ends.
+    ///
+    /// This is what an event is solved against, and what an opponent
+    /// consults once its own event is over.
+    pub fn clone_after(&self, event: usize) -> impl Fn(i32) -> f64 + Sync + '_ {
+        move |d: i32| self.value(event + 1, d)
+    }
+
     /// Solve every event, back to front.
     ///
     /// Takes about half a minute across all cores; the ten vectors it
