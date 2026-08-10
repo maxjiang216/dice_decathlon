@@ -11,7 +11,9 @@
 //! alternatives at a tolerance of [`EPS`], which is below `f32`
 //! resolution near 1.0, and values are chained through ten events.
 
+pub mod best_of_three;
 pub mod compress;
+pub mod discus;
 pub mod freeze;
 pub mod javelin;
 pub mod m1500;

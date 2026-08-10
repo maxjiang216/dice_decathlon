@@ -47,7 +47,7 @@ enum Command {
 /// everything after it, and only the 1500m stands alone.
 fn storage_report() {
     use dice_decathlon::twoplayer::{
-        compress, javelin, m1500, polevault, Axis,
+        compress, discus, javelin, m1500, polevault, Axis,
     };
 
     /// Read a first-mover value function at any difference.
@@ -76,6 +76,10 @@ fn storage_report() {
     let v8 = move |d: i32| as_player(&jav, jav_axis, d);
 
     let pv_axis = Axis::first_mover(Axis::for_event(339, 166, 48).hi);
+    let pv = polevault::solve_first_mover(pv_axis, &v8);
+    let v7 = move |d: i32| as_player(&pv, pv_axis, d);
+
+    let dis_axis = Axis::first_mover(Axis::for_event(309, 196, 30).hi);
 
     println!(
         "{:10} {:>13} {:>12} {:>11} {:>10} {:>10}  {:>7}  {:>6}",
@@ -96,6 +100,10 @@ fn storage_report() {
     println!(
         "{}",
         compress::report("polevault", polevault::measure(pv_axis, &v8))
+    );
+    println!(
+        "{}",
+        compress::report("discus", discus::measure(dis_axis, &v7))
     );
 }
 
