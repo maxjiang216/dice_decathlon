@@ -132,7 +132,7 @@ pub fn solve_first_mover(
                     for s in l.standings() {
                         cur[l.idx(s)] = if s.alive[mover] {
                             let (skip, attempt) =
-                                branches(&l, &next, i, s, mover);
+                                branches(l, &next, i, s, mover);
                             skip.max(attempt)
                         } else {
                             next[l.idx(s)]
@@ -219,7 +219,7 @@ pub fn measure(
                         cur[l.idx(s)] = next[l.idx(s)];
                         continue;
                     }
-                    let (skip, attempt) = branches(&l, &next, i, s, mover);
+                    let (skip, attempt) = branches(l, &next, i, s, mover);
                     cur[l.idx(s)] = skip.max(attempt);
                     if !reached(i, &s) {
                         continue;
